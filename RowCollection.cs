@@ -5,7 +5,9 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Terminal
 {
@@ -27,6 +29,20 @@ namespace Terminal
             for(var i = rows.Count - 1; i >= 0; i--)
             {
                 yield return rows[i];
+            }
+        }
+
+        public void Clear()
+        {
+            rows.Clear();
+            InvokeContentChanged();
+        }
+
+        public int Count
+        {
+            get
+            {
+                return rows.Count;
             }
         }
 

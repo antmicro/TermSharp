@@ -8,7 +8,7 @@ using Xwt.Drawing;
 
 namespace Terminal
 {
-    public interface ILayoutParameters
+    public interface ILayoutParameters : IGenerationAware
     {
         Font Font { get; }
         double Width { get; }

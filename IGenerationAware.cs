@@ -4,14 +4,11 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
-
 namespace Terminal
 {
-    public interface IRowCollection
+    public interface IGenerationAware
     {
-        void AppendRow(IRow row);
-        void Clear();
-        int Count { get; }
+        int Generation { get; }
     }
 }
 

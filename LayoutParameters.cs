@@ -16,7 +16,39 @@ namespace Terminal
         }
 
         public Font Font { get; set; }
-        public double Width { get; set; }
+
+        public double Width
+        {
+            get
+            {
+                return width;
+            }
+            set
+            {
+                if(value == width)
+                {
+                    return;
+                }
+                width = value;
+                UpdateGeneration();
+            }
+        }
+
+        public int Generation
+        {
+            get
+            {
+                return generation;
+            }
+        }
+
+        private void UpdateGeneration()
+        {
+            generation++;
+        }
+
+        private int generation;
+        private double width;
     }
 }
 

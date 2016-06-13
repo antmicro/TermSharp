@@ -6,6 +6,7 @@
 //
 using System;
 using System.Text;
+using Xwt;
 using Xwt.Drawing;
 
 namespace Terminal
@@ -21,26 +22,22 @@ namespace Terminal
             }
 #endif
             this.content = content;
-            textLayout = new TextLayout();
         }
 
         public double PrepareForDrawing(ILayoutParameters parameters)
         {
-            textLayout.Font = parameters.Font;
-
-            lineWidth = parameters.Width;
-            textLayout.Text = "a\na";
-            var heightOfALine = textLayout.GetCoordinateFromIndex(2).Y;
-            textLayout.Text = content;
-            return heightOfALine * (int)Math.Ceiling(textLayout.GetCoordinateFromIndex(content[content.Length - 1]).X / lineWidth);
+            textLayout = TextLayoutCache.GetValue(parameters);
+            lineSize = LineSizeCache.GetValue(parameters);
+            charWidth = CharWidthCache.GetValue(parameters);
+            return lineSize.Height * Math.Ceiling(content.Length * charWidth / lineSize.Width);
         }
 
         public void Draw(Context ctx)
         {
+            textLayout.Text = content;
             if(textLayout.Text.Length > 1)
             {
-                var widthOfAChar = textLayout.GetCoordinateFromIndex(1).X - textLayout.GetCoordinateFromIndex(0).X;
-                var charsOnLine = (int)Math.Floor(lineWidth / widthOfAChar);
+                var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
                 var result = new StringBuilder();
                 var counter = 0;
                 result.Append(textLayout.Text.Substring(result.Length, Math.Min(charsOnLine, textLayout.Text.Length - result.Length)));
@@ -56,9 +53,35 @@ namespace Terminal
 
         }
 
-        private double lineWidth;
-        private readonly TextLayout textLayout;
+        private static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)
+        {
+            var result = new TextLayout();
+            result.Font = parameters.Font;
+            return result;
+        }
+
+        private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
+        {
+            var textLayout = GetTextLayoutFromLayoutParams(parameters);
+            textLayout.Text = "a\na";
+            return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
+        }
+
+        private static double GetCharWidthFromLayoutParams(ILayoutParameters parameters)
+        {
+            var textLayout = GetTextLayoutFromLayoutParams(parameters);
+            textLayout.Text = "a";
+            return textLayout.GetCoordinateFromIndex(1).X;
+        }
+
+        private double charWidth;
+        private Size lineSize;
+        private TextLayout textLayout;
         private readonly string content;
+
+        private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(GetTextLayoutFromLayoutParams);
+        private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(GetLineSizeFromLayoutParams);
+        private static readonly SimpleCache<ILayoutParameters, double> CharWidthCache = new SimpleCache<ILayoutParameters, double>(GetCharWidthFromLayoutParams);
     }
 }
 
