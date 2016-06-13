@@ -40,8 +40,6 @@
     <Compile Include="TextRow.cs" />
     <Compile Include="LayoutParameters.cs" />
     <Compile Include="ILayoutParameters.cs" />
-    <Compile Include="RowCollection.cs" />
-    <Compile Include="IRowCollection.cs" />
     <Compile Include="SimpleCache.cs" />
     <Compile Include="IGenerationAware.cs" />
     <Compile Include="Terminal.cs" />

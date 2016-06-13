@@ -15,12 +15,13 @@ namespace Terminal
     {
         public Terminal()
         {
-            rows = new RowCollection();
+            rows = new List<IRow>();
             layoutParameters = new LayoutParameters(Font);
             Margins = new Rectangle();
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
-            PackStart(new TerminalCanvas(this), true, true);
+            canvas = new TerminalCanvas(this);
+            PackStart(canvas, true, true);
             scrollbar = new VScrollbar();
             PackEnd(scrollbar);
 
@@ -29,36 +30,51 @@ namespace Terminal
             };
         }
 
-        public Rectangle Margins { get; set; }
+        public void AppendRow(IRow row)
+        {
+            rows.Add(row);
+            canvas.QueueDraw();
+        }
 
-        public IRowCollection Rows
+        public IEnumerable<IRow> GetAllRows()
+        {
+            for(var i = rows.Count - 1; i >= 0; i--)
+            {
+                yield return rows[i];
+            }
+        }
+
+        public new void Clear()
+        {
+            rows.Clear();
+            canvas.QueueDraw();
+        }
+
+        public int Count
         {
             get
             {
-                return rows;
+                return rows.Count;
             }
         }
+
+        public Rectangle Margins { get; set; }
 
         private void PrepareLayoutParameters()
         {
             layoutParameters.Font = Font.WithFamily("Monaco").WithSize(12);
         }
 
-        private void RebuildHeightMap()
-        {
-            
-        }
-
-        private readonly RowCollection rows;
+        private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
         private readonly VScrollbar scrollbar;
+        private readonly TerminalCanvas canvas;
 
         private sealed class TerminalCanvas : Canvas
         {
             public TerminalCanvas(Terminal parent)
             {
                 this.parent = parent;
-                parent.rows.ContentChanged += OnRowsChanged;
             }
 
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
@@ -69,7 +85,7 @@ namespace Terminal
                 var rowsToDraw = new List<IRow>();
                 var heights = new List<double>();
                 var heightSoFar = parent.Margins.Height;
-                foreach(var row in parent.rows.GetAllRows())
+                foreach(var row in parent.GetAllRows())
                 {
                     var height = row.PrepareForDrawing(parent.layoutParameters);
                     heightSoFar += height;
@@ -91,11 +107,6 @@ namespace Terminal
                     rowsToDraw[i].Draw(ctx);
                 }
                 ctx.Restore();
-            }
-
-            private void OnRowsChanged()
-            {
-                QueueDraw();
             }
 
             private readonly Terminal parent;
