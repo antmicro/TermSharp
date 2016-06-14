@@ -52,14 +52,6 @@ namespace Terminal
             }
         }
 
-        public IEnumerable<IRow> GetAllRows()
-        {
-            for(var i = rows.Count - 1; i >= 0; i--)
-            {
-                yield return rows[i];
-            }
-        }
-
         public new void Clear()
         {
             rows.Clear();
