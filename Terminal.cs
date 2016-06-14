@@ -91,7 +91,9 @@ namespace Terminal
                 modifier = 0;
                 break;
             }
-            scrollbar.Value += scrollbar.PageSize * modifier;
+            var finalValue = Math.Max(0, scrollbar.Value + scrollbar.PageSize * modifier);
+            finalValue = Math.Min(finalValue, scrollbar.UpperValue - canvas.Bounds.Height);
+            scrollbar.Value = finalValue;
         }
 
         private void PrepareLayoutParameters()
