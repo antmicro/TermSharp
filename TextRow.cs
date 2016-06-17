@@ -32,7 +32,7 @@ namespace Terminal
             return lineSize.Height * Math.Ceiling(content.Length * charWidth / lineSize.Width);
         }
 
-        public void Draw(Context ctx)
+        public void Draw(Context ctx, Rectangle selectedArea)
         {
             textLayout.Text = content;
             if(textLayout.Text.Length > 1)
@@ -49,8 +49,20 @@ namespace Terminal
                 }
                 textLayout.Text = result.ToString();
             }
-            ctx.DrawTextLayout(textLayout, 0, 0);
 
+            if(selectedArea != default(Rectangle))
+            {
+                var startingColumn = Math.Round(selectedArea.X / charWidth);
+                var endingColumn = Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
+
+                var startIndex = (int)startingColumn;
+                var endIndex = (int)endingColumn;
+                textLayout.SetBackground(Colors.White, startIndex, endIndex - startIndex);
+                textLayout.SetForeground(Colors.Black, startIndex, endIndex - startIndex);
+            }
+
+            ctx.DrawTextLayout(textLayout, 0, 0);
+            textLayout.ClearAttributes();
         }
 
         private static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)

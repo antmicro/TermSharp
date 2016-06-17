@@ -32,6 +32,9 @@ namespace Terminal
 
             canvas.MouseScrolled += OnCanvasMouseScroll;
             canvas.BoundsChanged += OnCanvasBoundsChanged;
+            canvas.ButtonPressed += OnCanvasButtonPressed;
+            canvas.ButtonReleased += OnCanvasButtonReleased;
+            canvas.MouseMoved += OnCanvasMouseMoved;
             scrollbar.StepIncrement = 15; // TODO
 
             scrollbar.ValueChanged += OnScrollbarValueChanged;
@@ -77,6 +80,34 @@ namespace Terminal
             double rowOffset;
             canvas.FirstRowToDisplay = FindRowIndexAtPosition(scrollbar.Value, out rowOffset);
             canvas.Offset = scrollbar.Value - rowOffset;
+            canvas.QueueDraw();
+        }
+
+        private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
+        {
+            currentScrollStart = e.Position;
+        }
+
+        private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
+        {
+            if(e.Position == (currentScrollStart ?? default(Point)))
+            {
+                canvas.SelectedArea = default(Rectangle);
+            }
+            currentScrollStart = null;
+            canvas.QueueDraw();
+        }
+
+        private void OnCanvasMouseMoved(object sender, MouseMovedEventArgs e)
+        {
+            if(!currentScrollStart.HasValue)
+            {
+                return;
+            }
+            var scrollStart = currentScrollStart.Value;
+
+            var selectedArea = new Rectangle(scrollStart, new Size(e.X - scrollStart.X, e.Y - scrollStart.Y));;
+            canvas.SelectedArea = selectedArea;
             canvas.QueueDraw();
         }
 
@@ -239,6 +270,7 @@ namespace Terminal
         private double[] unfinishedHeightMap;
         private int canvasBoundChangedGeneration;
         private int rowsGeneration;
+        private Point? currentScrollStart;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
@@ -259,6 +291,8 @@ namespace Terminal
 
             public double Offset { get; set; }
 
+            public Rectangle SelectedArea { get; set; }
+
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
             {
                 parent.layoutParameters.Width = Size.Width;
@@ -275,7 +309,10 @@ namespace Terminal
                 while(i < parent.rows.Count && heightSoFar - Offset < Bounds.Height)
                 {
                     var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
-                    parent.rows[i].Draw(ctx);
+                    var rowRectangle = new Rectangle(0, heightSoFar, parent.layoutParameters.Width, height);
+                    var selectedAreaInRow = rowRectangle.Intersect(SelectedArea);
+                    selectedAreaInRow.Y = 0;
+                    parent.rows[i].Draw(ctx, selectedAreaInRow);
                     heightSoFar += height;
                     ctx.Translate(0, height);
                     i++;
