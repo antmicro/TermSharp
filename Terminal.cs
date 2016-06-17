@@ -70,7 +70,7 @@ namespace Terminal
             }
         }
 
-        public Rectangle Margins { get; set; }
+        public Rectangle Margins { get; set; } // TODO
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {
