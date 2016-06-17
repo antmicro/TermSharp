@@ -5,7 +5,10 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xwt;
 using Xwt.Drawing;
 
@@ -28,16 +31,16 @@ namespace Terminal
             PackEnd(scrollbar);
 
             canvas.MouseScrolled += OnCanvasMouseScroll;
+            canvas.BoundsChanged += OnCanvasBoundsChanged;
+            scrollbar.StepIncrement = 15; // TODO
 
-            scrollbar.ValueChanged += delegate 
-            {
-                canvas.QueueDraw();
-            };
+            scrollbar.ValueChanged += OnScrollbarValueChanged;
         }
 
         public void AppendRow(IRow row)
         {
-            var weWereAtEnd = scrollbar.Value == Math.Max(0, GetMaximumHeight() - canvas.Bounds.Height);
+            rowsGeneration++;
+            var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
             rows.Add(row);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
             canvas.QueueDraw();
@@ -54,6 +57,7 @@ namespace Terminal
 
         public new void Clear()
         {
+            rowsGeneration++;
             rows.Clear();
             Refresh();
         }
@@ -67,6 +71,14 @@ namespace Terminal
         }
 
         public Rectangle Margins { get; set; }
+
+        private void OnScrollbarValueChanged(object sender, EventArgs e)
+        {
+            double rowOffset;
+            canvas.FirstRowToDisplay = FindRowIndexAtPosition(scrollbar.Value, out rowOffset);
+            canvas.Offset = scrollbar.Value - rowOffset;
+            canvas.QueueDraw();
+        }
 
         private void OnCanvasMouseScroll(object sender, MouseScrolledEventArgs e)
         {
@@ -83,9 +95,40 @@ namespace Terminal
                 modifier = 0;
                 break;
             }
-            var finalValue = Math.Max(0, scrollbar.Value + scrollbar.PageSize * modifier);
+            var finalValue = Math.Max(0, scrollbar.Value + scrollbar.StepIncrement * modifier);
             finalValue = Math.Min(finalValue, scrollbar.UpperValue - canvas.Bounds.Height);
             scrollbar.Value = finalValue;
+        }
+
+        private async void OnCanvasBoundsChanged(object sender, EventArgs e)
+        {
+            var ourRowsGeneration = rowsGeneration;
+            double oldPosition;
+            var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out oldPosition);
+            var oldScrollbarValue = scrollbar.Value;
+
+            layoutParameters.Width = canvas.Size.Width;
+
+            if(!RebuildHeightMap(false))
+            {
+                var boundChangedGeneration = ++canvasBoundChangedGeneration;
+
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                if(ourRowsGeneration != rowsGeneration || boundChangedGeneration != canvasBoundChangedGeneration)
+                {
+                    return;
+                }
+                RebuildHeightMap(true);
+            }
+
+            scrollbar.PageSize = canvas.Bounds.Height;
+            scrollbar.UpperValue = GetMaximumHeight();
+
+            // difference between old and new position of the first displayed row:
+            var diff = GetStartHeightOfTheRow(firstDisplayedRowIndex) - oldPosition;
+            scrollbar.Value = Math.Min(oldScrollbarValue + diff, GetMaximumScrollbarValue());
+
+            canvas.QueueDraw();
         }
 
         private void PrepareLayoutParameters()
@@ -93,15 +136,33 @@ namespace Terminal
             layoutParameters.Font = Font.WithFamily("Monaco").WithSize(12);
         }
 
-        private void RebuildHeightMap()
+        private bool RebuildHeightMap(bool continueEvenIfLongTask = true)
         {
-            heightMap = new double[rows.Count];
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            double[] newHeightMap;
+            if(unfinishedHeightMap != null && unfinishedHeightMap.Length == rows.Count)
+            {
+                newHeightMap = unfinishedHeightMap;
+            }
+            else
+            {
+                newHeightMap = new double[rows.Count];
+                unfinishedHeightMap = newHeightMap;
+            }
             var heightSoFar = 0.0;
-            for(var i = 0; i < heightMap.Length; i++)
+            for(var i = 0; i < newHeightMap.Length; i++)
             {
                 heightSoFar += rows[i].PrepareForDrawing(layoutParameters);
-                heightMap[i] = heightSoFar;
+                newHeightMap[i] = heightSoFar;
+                if(!continueEvenIfLongTask && (i % HeightMapCheckTimeoutEveryNthRow) == 1 && stopwatch.Elapsed > HeightMapRebuildTimeout)
+                {
+                    return false;
+                }
             }
+            heightMap = newHeightMap;
+            unfinishedHeightMap = null;
+            return true;
         }
 
         private void AddToHeightMap(double value)
@@ -117,6 +178,16 @@ namespace Terminal
             heightMap[oldHeightMap.Length] = value + heightMap[oldHeightMap.Length - 1];
         }
 
+        private double GetStartHeightOfTheRow(int rowIndex)
+        {
+            return rowIndex > 0 ? heightMap[rowIndex - 1] : 0.0;
+        }
+
+        private double GetMaximumScrollbarValue()
+        {
+            return Math.Max(0, GetMaximumHeight() - scrollbar.PageSize);
+        }
+
         private double GetMaximumHeight()
         {
             if(heightMap.Length == 0)
@@ -126,18 +197,22 @@ namespace Terminal
             return heightMap[heightMap.Length - 1];
         }
 
-        private int RowIndexAtPosition(double position, out double rowStart)
+        private int FindRowIndexAtPosition(double position, out double rowStart)
         {
             var result = Array.BinarySearch(heightMap, position);
             if(result < 0)
             {
                 result = ~result;
             }
+            else
+            {
+                result++; // because heightMap[i] shows where ith row *ends* and therefore where (i+1)th starts
+            }
             if(result == heightMap.Length)
             {
                 result--;
             }
-            rowStart = heightMap[result];
+            rowStart = GetStartHeightOfTheRow(result);
             return result;
         }
 
@@ -156,16 +231,22 @@ namespace Terminal
 
         private void Refresh()
         {
-            RebuildHeightMap();
+            RebuildHeightMap(true);
             canvas.QueueDraw();
         }
 
         private double[] heightMap;
+        private double[] unfinishedHeightMap;
+        private int canvasBoundChangedGeneration;
+        private int rowsGeneration;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
         private readonly VScrollbar scrollbar;
         private readonly TerminalCanvas canvas;
+
+        private static readonly TimeSpan HeightMapRebuildTimeout = TimeSpan.FromMilliseconds(30);
+        private const int HeightMapCheckTimeoutEveryNthRow = 1000;
 
         private sealed class TerminalCanvas : Canvas
         {
@@ -174,45 +255,31 @@ namespace Terminal
                 this.parent = parent;
             }
 
+            public int FirstRowToDisplay { get; set; }
+
+            public double Offset { get; set; }
+
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
             {
-                parent.layoutParameters.Width = Size.Width; // TODO
+                parent.layoutParameters.Width = Size.Width;
                 if(parent.rows.Count == 0)
                 {
                     return;
                 }
                 ctx.SetColor(Colors.White);
 
-                var rowsToDraw = new List<IRow>();
-                var heights = new List<double>();
                 var heightSoFar = 0.0;
 
-                double rowPosition;
-                var index = parent.RowIndexAtPosition(parent.scrollbar.Value + Bounds.Height, out rowPosition);
-                var additionalSpaceToDraw = rowPosition - parent.scrollbar.Value - Bounds.Height;
-                if(additionalSpaceToDraw < 0)
+                ctx.Translate(0, -Offset);
+                var i = FirstRowToDisplay;
+                while(i < parent.rows.Count && heightSoFar - Offset < Bounds.Height)
                 {
-                    additionalSpaceToDraw = 0;
-                }
-                while(index >= 0 && heightSoFar <= Bounds.Height + additionalSpaceToDraw)
-                {
-                    var row = parent.rows[index];
-                    var height = row.PrepareForDrawing(parent.layoutParameters);
+                    var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
+                    parent.rows[i].Draw(ctx);
                     heightSoFar += height;
-                    heights.Add(height);
-                    rowsToDraw.Add(row);
-                    index--;
+                    ctx.Translate(0, height);
+                    i++;
                 }
-
-                ctx.Translate(0, additionalSpaceToDraw);
-                ctx.Save();
-                ctx.Translate(0, Math.Min(heightSoFar, Bounds.Height));
-                for(var i = 0; i < rowsToDraw.Count; i++)
-                {
-                    ctx.Translate(0, -heights[i]);
-                    rowsToDraw[i].Draw(ctx);
-                }
-                ctx.Restore();
             }
 
             private readonly Terminal parent;
