@@ -5,6 +5,7 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Xwt;
 using Xwt.Drawing;
@@ -32,10 +33,11 @@ namespace Terminal
             return lineSize.Height * Math.Ceiling(content.Length * charWidth / lineSize.Width);
         }
 
-        public void Draw(Context ctx, Rectangle selectedArea)
+        public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection)
         {
             ctx.SetColor(Colors.White);
             textLayout.Text = content;
+            var newLinesAt = new List<int> { 0 };
             if(textLayout.Text.Length > 1)
             {
                 var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
@@ -45,6 +47,7 @@ namespace Terminal
                 while((result.Length - counter) < textLayout.Text.Length)
                 {
                     result.Append('\n');
+                    newLinesAt.Add(result.Length);
                     counter++;
                     result.Append(textLayout.Text.Substring(result.Length - counter, Math.Min(charsOnLine, textLayout.Text.Length - (result.Length - counter))));
                 }
@@ -53,14 +56,35 @@ namespace Terminal
 
             if(selectedArea != default(Rectangle))
             {
-                var startingColumn = Math.Round(selectedArea.X / charWidth);
-                var endingColumn = Math.Min(content.Length, Math.Round((selectedArea.X + selectedArea.Width) / charWidth));
+                var textWithNewLines = textLayout.Text;
 
-                var startIndex = (int)startingColumn;
-                var endIndex = (int)endingColumn;
+                var startColumn = (int)Math.Round(selectedArea.X / charWidth);
+                var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
+                var startRow = (int)Math.Floor(selectedArea.Y / lineSize.Height);
+                var endRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
+
+                if(selectionDirection == SelectionDirection.SW || selectionDirection == SelectionDirection.NW)
+                {
+                    Utilities.Swap(ref startColumn, ref endColumn);
+                }
+
+                if(selectionDirection == SelectionDirection.NE || selectionDirection == SelectionDirection.NW)
+                {
+                    Utilities.Swap(ref startRow, ref endRow);
+                }
+
+                var startIndex = startColumn + newLinesAt[startRow];
+                var endIndex = endColumn + newLinesAt[endRow];
+
+                if(endIndex < startIndex)
+                {
+                    Utilities.Swap(ref startIndex, ref endIndex);
+                }
+                endIndex = Math.Min(endIndex, textWithNewLines.Length);
+
                 textLayout.SetBackground(Colors.White, startIndex, endIndex - startIndex);
                 textLayout.SetForeground(Colors.Black, startIndex, endIndex - startIndex);
-                selectedContent = content.Substring(startIndex, endIndex - startIndex);
+                selectedContent = textWithNewLines.Substring(startIndex, endIndex - startIndex);
             }
             else
             {

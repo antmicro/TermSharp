@@ -12,7 +12,7 @@ namespace Terminal
     public interface IRow
     {
         double PrepareForDrawing(ILayoutParameters parameters);
-        void Draw(Context ctx, Rectangle selectedArea);
+        void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection);
         void FillClipboardData(ClipboardData data);
     }
 }

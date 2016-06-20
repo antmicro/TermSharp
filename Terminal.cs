@@ -321,13 +321,16 @@ namespace Terminal
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
             {
                 var screenSelectedArea = SelectedArea;
+                var selectionDirection = SelectionDirection.SE;
                 if(screenSelectedArea.Width < 0)
                 {
+                    selectionDirection = (SelectionDirection)((int)selectionDirection + 1);
                     screenSelectedArea.X += screenSelectedArea.Width;
                     screenSelectedArea.Width = -screenSelectedArea.Width;
                 }
                 if(screenSelectedArea.Height < 0)
                 {
+                    selectionDirection = (SelectionDirection)((int)selectionDirection + 2);
                     screenSelectedArea.Y += screenSelectedArea.Height;
                     screenSelectedArea.Height = -screenSelectedArea.Height;
                 }
@@ -370,10 +373,13 @@ namespace Terminal
                             selectedAreaInRow.Width = parent.layoutParameters.Width;
                         }
                     }
-                    selectedAreaInRow.Y -= heightSoFar;
+                    if(selectedAreaInRow != default(Rectangle))
+                    {
+                        selectedAreaInRow.Y -= heightSoFar;
+                    }
 
                     ctx.Save();
-                    parent.rows[i].Draw(ctx, selectedAreaInRow);
+                    parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection);
                     ctx.Restore();
 
                     heightSoFar += height;

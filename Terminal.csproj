@@ -45,6 +45,8 @@
     <Compile Include="Terminal.cs" />
     <Compile Include="SelectionMode.cs" />
     <Compile Include="ClipboardData.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="SelectionDirection.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
