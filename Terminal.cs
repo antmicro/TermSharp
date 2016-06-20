@@ -154,6 +154,8 @@ namespace Terminal
 
         private async void OnCanvasBoundsChanged(object sender, EventArgs e)
         {
+            canvas.SelectedArea = default(Rectangle);
+
             var ourRowsGeneration = rowsGeneration;
             double oldPosition;
             var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out oldPosition);
