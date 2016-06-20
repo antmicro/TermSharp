@@ -128,7 +128,7 @@ namespace Terminal
                 return;
             }
             var scrollStart = currentScrollStart.Value;
-            canvas.SelectedArea = new Rectangle(scrollStart, new Size(e.X - scrollStart.X, e.Y - scrollStart.Y));
+            canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y + scrollbar.Value, e.X - scrollStart.X, e.Y - scrollStart.Y);
             canvas.QueueDraw();
         }
 
