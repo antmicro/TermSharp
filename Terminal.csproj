@@ -44,6 +44,7 @@
     <Compile Include="IGenerationAware.cs" />
     <Compile Include="Terminal.cs" />
     <Compile Include="SelectionMode.cs" />
+    <Compile Include="ClipboardData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

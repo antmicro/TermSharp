@@ -13,6 +13,7 @@ namespace Terminal
     {
         double PrepareForDrawing(ILayoutParameters parameters);
         void Draw(Context ctx, Rectangle selectedArea);
+        void FillClipboardData(ClipboardData data);
     }
 }
 

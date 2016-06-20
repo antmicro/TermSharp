@@ -65,6 +65,16 @@ namespace Terminal
             Refresh();
         }
 
+        public ClipboardData CollectClipboardData()
+        {
+            var result = new ClipboardData();
+            foreach(var row in rows)
+            {
+                row.FillClipboardData(result);
+            }
+            return result;
+        }
+
         public int Count
         {
             get

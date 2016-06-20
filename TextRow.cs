@@ -54,16 +54,29 @@ namespace Terminal
             if(selectedArea != default(Rectangle))
             {
                 var startingColumn = Math.Round(selectedArea.X / charWidth);
-                var endingColumn = Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
+                var endingColumn = Math.Min(content.Length, Math.Round((selectedArea.X + selectedArea.Width) / charWidth));
 
                 var startIndex = (int)startingColumn;
                 var endIndex = (int)endingColumn;
                 textLayout.SetBackground(Colors.White, startIndex, endIndex - startIndex);
                 textLayout.SetForeground(Colors.Black, startIndex, endIndex - startIndex);
+                selectedContent = content.Substring(startIndex, endIndex - startIndex);
+            }
+            else
+            {
+                selectedContent = null;
             }
 
             ctx.DrawTextLayout(textLayout, 0, 0);
             textLayout.ClearAttributes();
+        }
+
+        public void FillClipboardData(ClipboardData data)
+        {
+            if(selectedContent != null)
+            {
+                data.AppendText(selectedContent);
+            }
         }
 
         private static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)
@@ -90,6 +103,7 @@ namespace Terminal
         private double charWidth;
         private Size lineSize;
         private TextLayout textLayout;
+        private string selectedContent;
         private readonly string content;
 
         private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(GetTextLayoutFromLayoutParams);
