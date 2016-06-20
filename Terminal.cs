@@ -73,13 +73,26 @@ namespace Terminal
             }
         }
 
+        public SelectionMode SelectionMode
+        {
+            get
+            {
+                return canvas.SelectionMode;
+            }
+            set
+            {
+                canvas.SelectionMode = value;
+            }
+        }
+
         public Rectangle Margins { get; set; } // TODO
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {
             double rowOffset;
             canvas.FirstRowToDisplay = FindRowIndexAtPosition(scrollbar.Value, out rowOffset);
-            canvas.Offset = scrollbar.Value - rowOffset;
+            canvas.FirstRowHeight = rowOffset;
+            canvas.OffsetFromFirstRow = scrollbar.Value - rowOffset;
             canvas.QueueDraw();
         }
 
@@ -106,8 +119,9 @@ namespace Terminal
             }
             var scrollStart = currentScrollStart.Value;
 
-            var selectedArea = new Rectangle(scrollStart, new Size(e.X - scrollStart.X, e.Y - scrollStart.Y));;
-            canvas.SelectedArea = selectedArea;
+            var selectionStart = new Point(Math.Min(scrollStart.X, e.X), Math.Min(scrollStart.Y, e.Y) + scrollbar.Value);
+            var selectionSize = new Size(Math.Abs(e.X - scrollStart.X), Math.Abs(e.Y - scrollStart.Y));
+            canvas.SelectedArea = new Rectangle(selectionStart, selectionSize);
             canvas.QueueDraw();
         }
 
@@ -289,30 +303,61 @@ namespace Terminal
 
             public int FirstRowToDisplay { get; set; }
 
-            public double Offset { get; set; }
+            public double FirstRowHeight { get; set; }
+
+            public double OffsetFromFirstRow { get; set; }
 
             public Rectangle SelectedArea { get; set; }
 
+            public SelectionMode SelectionMode { get; set; }
+
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
             {
+                var screenSelectedArea = SelectedArea;
+                screenSelectedArea.Y -= FirstRowHeight;
+                
                 parent.layoutParameters.Width = Size.Width;
                 if(parent.rows.Count == 0)
                 {
                     return;
                 }
-                ctx.SetColor(Colors.White);
 
                 var heightSoFar = 0.0;
 
-                ctx.Translate(0, -Offset);
+                ctx.Translate(0, -OffsetFromFirstRow);
                 var i = FirstRowToDisplay;
-                while(i < parent.rows.Count && heightSoFar - Offset < Bounds.Height)
+                while(i < parent.rows.Count && heightSoFar - OffsetFromFirstRow < Bounds.Height)
                 {
                     var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
                     var rowRectangle = new Rectangle(0, heightSoFar, parent.layoutParameters.Width, height);
-                    var selectedAreaInRow = rowRectangle.Intersect(SelectedArea);
-                    selectedAreaInRow.Y = 0;
+                    var selectedAreaInRow = rowRectangle.Intersect(screenSelectedArea);
+                    if(SelectionMode == SelectionMode.Normal && selectedAreaInRow != default(Rectangle) &&
+                       (screenSelectedArea.Y <= rowRectangle.Y || screenSelectedArea.Y + screenSelectedArea.Height >= rowRectangle.Y + rowRectangle.Height))
+                    {
+                        if(rowRectangle.Y < screenSelectedArea.Y)
+                        {
+                            // I'm the first row (and there is a second row)
+                            selectedAreaInRow.Width = parent.layoutParameters.Width - selectedAreaInRow.X;
+                        }
+                        else if(rowRectangle.Y + rowRectangle.Height > screenSelectedArea.Y + screenSelectedArea.Height)
+                        {
+                            // I'm the last row (and there is some other row)
+                            selectedAreaInRow.Width += selectedAreaInRow.X;
+                            selectedAreaInRow.X = 0;
+                        }
+                        else
+                        {
+                            // nor the first neither the last one - must be one of the middle rows
+                            selectedAreaInRow.X = 0;
+                            selectedAreaInRow.Width = parent.layoutParameters.Width;
+                        }
+                    }
+                    selectedAreaInRow.Y -= heightSoFar;
+
+                    ctx.Save();
                     parent.rows[i].Draw(ctx, selectedAreaInRow);
+                    ctx.Restore();
+
                     heightSoFar += height;
                     ctx.Translate(0, height);
                     i++;

@@ -34,6 +34,7 @@ namespace Terminal
 
         public void Draw(Context ctx, Rectangle selectedArea)
         {
+            ctx.SetColor(Colors.White);
             textLayout.Text = content;
             if(textLayout.Text.Length > 1)
             {
