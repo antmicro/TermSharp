@@ -128,10 +128,7 @@ namespace Terminal
                 return;
             }
             var scrollStart = currentScrollStart.Value;
-
-            var selectionStart = new Point(Math.Min(scrollStart.X, e.X), Math.Min(scrollStart.Y, e.Y) + scrollbar.Value);
-            var selectionSize = new Size(Math.Abs(e.X - scrollStart.X), Math.Abs(e.Y - scrollStart.Y));
-            canvas.SelectedArea = new Rectangle(selectionStart, selectionSize);
+            canvas.SelectedArea = new Rectangle(scrollStart, new Size(e.X - scrollStart.X, e.Y - scrollStart.Y));
             canvas.QueueDraw();
         }
 
@@ -324,6 +321,16 @@ namespace Terminal
             protected override void OnDraw(Context ctx, Rectangle dirtyRect)
             {
                 var screenSelectedArea = SelectedArea;
+                if(screenSelectedArea.Width < 0)
+                {
+                    screenSelectedArea.X += screenSelectedArea.Width;
+                    screenSelectedArea.Width = -screenSelectedArea.Width;
+                }
+                if(screenSelectedArea.Height < 0)
+                {
+                    screenSelectedArea.Y += screenSelectedArea.Height;
+                    screenSelectedArea.Height = -screenSelectedArea.Height;
+                }
                 screenSelectedArea.Y -= FirstRowHeight;
                 
                 parent.layoutParameters.Width = Size.Width;
@@ -347,12 +354,13 @@ namespace Terminal
                         if(rowRectangle.Y < screenSelectedArea.Y)
                         {
                             // I'm the first row (and there is a second row)
+                            selectedAreaInRow.X = SelectedArea.Height > 0 ? SelectedArea.X : SelectedArea.X + SelectedArea.Width;
                             selectedAreaInRow.Width = parent.layoutParameters.Width - selectedAreaInRow.X;
                         }
                         else if(rowRectangle.Y + rowRectangle.Height > screenSelectedArea.Y + screenSelectedArea.Height)
                         {
                             // I'm the last row (and there is some other row)
-                            selectedAreaInRow.Width += selectedAreaInRow.X;
+                            selectedAreaInRow.Width = SelectedArea.Height > 0 ? SelectedArea.X + SelectedArea.Width : SelectedArea.X;
                             selectedAreaInRow.X = 0;
                         }
                         else
