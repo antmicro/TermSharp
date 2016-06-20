@@ -60,7 +60,7 @@ namespace Terminal
 
                 var startColumn = (int)Math.Round(selectedArea.X / charWidth);
                 var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
-                var startRow = (int)Math.Floor(selectedArea.Y / lineSize.Height);
+                var startRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor(selectedArea.Y / lineSize.Height));
                 var endRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
 
                 if(selectionDirection == SelectionDirection.SW || selectionDirection == SelectionDirection.NW)
