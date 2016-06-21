@@ -108,7 +108,9 @@ namespace Terminal
 
         private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
         {
-            currentScrollStart = e.Position;
+            var position = e.Position;
+            position.Y += scrollbar.Value;
+            currentScrollStart = position;
         }
 
         private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
@@ -128,7 +130,7 @@ namespace Terminal
                 return;
             }
             var scrollStart = currentScrollStart.Value;
-            canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y + scrollbar.Value, e.X - scrollStart.X, e.Y - scrollStart.Y);
+            canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, e.X - scrollStart.X, e.Y + scrollbar.Value - scrollStart.Y);
             canvas.QueueDraw();
         }
 
