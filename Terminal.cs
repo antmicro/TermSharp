@@ -38,6 +38,8 @@ namespace Terminal
             scrollbar.StepIncrement = 15; // TODO
 
             scrollbar.ValueChanged += OnScrollbarValueChanged;
+            autoscrollEnabled = new TaskCompletionSource<bool>();
+            HandleAutoscrollAsync();
         }
 
         public void AppendRow(IRow row)
@@ -54,7 +56,7 @@ namespace Terminal
             scrollbar.UpperValue = GetMaximumHeight();
             if(weWereAtEnd)
             {
-                scrollbar.Value = scrollbar.UpperValue - canvas.Bounds.Height;
+                SetScrollbarValue(scrollbar.UpperValue - canvas.Bounds.Height);
             }
         }
 
@@ -103,7 +105,7 @@ namespace Terminal
             canvas.FirstRowToDisplay = FindRowIndexAtPosition(scrollbar.Value, out rowOffset);
             canvas.FirstRowHeight = rowOffset;
             canvas.OffsetFromFirstRow = scrollbar.Value - rowOffset;
-            canvas.QueueDraw();
+            RefreshSelection();
         }
 
         private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
@@ -115,12 +117,15 @@ namespace Terminal
 
         private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
         {
-            if(e.Position == (currentScrollStart ?? default(Point)))
+            SetAutoscrollValue(0);
+            var mousePosition = e.Position;
+            mousePosition.Y += scrollbar.Value;
+            if(mousePosition == (currentScrollStart ?? default(Point)))
             {
                 canvas.SelectedArea = default(Rectangle);
             }
             currentScrollStart = null;
-            canvas.QueueDraw();
+            RefreshSelection();
         }
 
         private void OnCanvasMouseMoved(object sender, MouseMovedEventArgs e)
@@ -129,10 +134,22 @@ namespace Terminal
             {
                 return;
             }
-            var scrollStart = currentScrollStart.Value;
-            canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, e.X - scrollStart.X, e.Y + scrollbar.Value - scrollStart.Y);
-            canvas.QueueDraw();
+            lastMousePosition = e.Position;
+            if(e.Position.Y < 0)
+            {
+                SetAutoscrollValue((int)e.Position.Y);
+            }
+            else if(e.Position.Y > canvas.Bounds.Height)
+            {
+                SetAutoscrollValue((int)(e.Position.Y - canvas.Bounds.Height));
+            }
+            else
+            {
+                SetAutoscrollValue(0);
+            }
+            RefreshSelection();
         }
+
 
         private void OnCanvasMouseScroll(object sender, MouseScrolledEventArgs e)
         {
@@ -149,9 +166,7 @@ namespace Terminal
                 modifier = 0;
                 break;
             }
-            var finalValue = Math.Max(0, scrollbar.Value + scrollbar.StepIncrement * modifier);
-            finalValue = Math.Min(finalValue, scrollbar.UpperValue - canvas.Bounds.Height);
-            scrollbar.Value = finalValue;
+            SetScrollbarValue(scrollbar.Value + scrollbar.StepIncrement * modifier);
         }
 
         private async void OnCanvasBoundsChanged(object sender, EventArgs e)
@@ -182,9 +197,59 @@ namespace Terminal
 
             // difference between old and new position of the first displayed row:
             var diff = GetStartHeightOfTheRow(firstDisplayedRowIndex) - oldPosition;
-            scrollbar.Value = Math.Min(oldScrollbarValue + diff, GetMaximumScrollbarValue());
+            SetScrollbarValue(oldScrollbarValue + diff);
 
             canvas.QueueDraw();
+        }
+
+        private void SetAutoscrollValue(int value)
+        {
+            autoscrollStep = value;
+            if(value != 0)
+            {
+                autoscrollEnabled.TrySetResult(true);
+            }
+            else
+            {
+                if(autoscrollEnabled.Task.IsCompleted)
+                {
+                    autoscrollEnabled = new TaskCompletionSource<bool>();
+                }
+            }
+        }
+
+        private void SetScrollbarValue(double value)
+        {
+            var finalValue = Math.Max(0, value);
+            finalValue = Math.Min(finalValue, GetMaximumScrollbarValue());
+            scrollbar.Value = finalValue;
+        }
+
+        private void RefreshSelection()
+        {
+            if(currentScrollStart.HasValue)
+            {
+                var scrollStart = currentScrollStart.Value;
+                canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
+            }
+            canvas.QueueDraw();
+        }
+
+        private async void HandleAutoscrollAsync()
+        {
+            while(true)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(40));
+                if(autoscrollStep != 0)
+                {
+                    if(Math.Abs(autoscrollStep) > scrollbar.PageSize/2)
+                    {
+                        autoscrollStep = (int)(Math.Sign(autoscrollStep) * scrollbar.PageSize / 2);
+                    }
+                    SetScrollbarValue(scrollbar.Value + autoscrollStep);
+                }
+                await autoscrollEnabled.Task;
+            }
         }
 
         private void PrepareLayoutParameters()
@@ -296,6 +361,9 @@ namespace Terminal
         private int canvasBoundChangedGeneration;
         private int rowsGeneration;
         private Point? currentScrollStart;
+        private Point lastMousePosition;
+        private int autoscrollStep;
+        private TaskCompletionSource<bool> autoscrollEnabled;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
