@@ -58,18 +58,14 @@ namespace Terminal
             {
                 var textWithNewLines = textLayout.Text;
 
-                var startColumn = (int)Math.Round(selectedArea.X / charWidth);
-                var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
                 var startRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor(selectedArea.Y / lineSize.Height));
                 var endRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
+                var startColumn = (int)Math.Round(selectedArea.X / charWidth);
+                var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
 
-                if(selectionDirection == SelectionDirection.SW || selectionDirection == SelectionDirection.NW)
+                if(selectionDirection == SelectionDirection.NW)
                 {
                     Utilities.Swap(ref startColumn, ref endColumn);
-                }
-
-                if(selectionDirection == SelectionDirection.NE || selectionDirection == SelectionDirection.NW)
-                {
                     Utilities.Swap(ref startRow, ref endRow);
                 }
 
@@ -80,7 +76,9 @@ namespace Terminal
                 {
                     Utilities.Swap(ref startIndex, ref endIndex);
                 }
-                endIndex = Math.Min(endIndex, textWithNewLines.Length);
+
+                startIndex = Math.Max(0, Math.Min(textWithNewLines.Length, startIndex));
+                endIndex = Math.Max(0, Math.Min(textWithNewLines.Length, endIndex));
 
                 textLayout.SetBackground(Colors.White, startIndex, endIndex - startIndex);
                 textLayout.SetForeground(Colors.Black, startIndex, endIndex - startIndex);
