@@ -25,6 +25,7 @@ namespace Terminal
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
             canvas = new TerminalCanvas(this);
+            cursor = new Cursor(canvas, GetRowHeightFromScreenIndex);
             PackStart(canvas, true, true);
             scrollbar = new VScrollbar();
             scrollbar.Sensitive = false;
@@ -64,7 +65,13 @@ namespace Terminal
         {
             rowsGeneration++;
             rows.Clear();
-            Refresh();
+            RebuildHeightMap(true);
+            canvas.QueueDraw();
+        }
+
+        public void Redraw()
+        {
+            canvas.QueueDraw();
         }
 
         public ClipboardData CollectClipboardData()
@@ -98,6 +105,14 @@ namespace Terminal
         }
 
         public Rectangle Margins { get; set; } // TODO
+
+        public new Cursor Cursor
+        {
+            get
+            {
+                return cursor;
+            }
+        }
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {
@@ -318,6 +333,15 @@ namespace Terminal
             return heightMap[heightMap.Length - 1];
         }
 
+        private double GetRowHeightFromScreenIndex(int index)
+        {
+            if(index == 0)
+            {
+                return 0;
+            }
+            return heightMap[index - 1];
+        }
+
         private int FindRowIndexAtPosition(double position, out double rowStart)
         {
             var result = Array.BinarySearch(heightMap, position);
@@ -350,12 +374,6 @@ namespace Terminal
             }
         }
 
-        private void Refresh()
-        {
-            RebuildHeightMap(true);
-            canvas.QueueDraw();
-        }
-
         private double[] heightMap;
         private double[] unfinishedHeightMap;
         private int canvasBoundChangedGeneration;
@@ -369,15 +387,17 @@ namespace Terminal
         private readonly LayoutParameters layoutParameters;
         private readonly VScrollbar scrollbar;
         private readonly TerminalCanvas canvas;
+        private readonly Cursor cursor;
 
         private static readonly TimeSpan HeightMapRebuildTimeout = TimeSpan.FromMilliseconds(30);
         private const int HeightMapCheckTimeoutEveryNthRow = 1000;
 
-        private sealed class TerminalCanvas : Canvas
+        internal sealed class TerminalCanvas : Canvas
         {
             public TerminalCanvas(Terminal parent)
             {
                 this.parent = parent;
+                Cursor = CursorType.IBeam;
             }
 
             public int FirstRowToDisplay { get; set; }
@@ -409,14 +429,11 @@ namespace Terminal
                 screenSelectedArea.Y -= FirstRowHeight;
                 
                 parent.layoutParameters.Width = Size.Width;
-                if(parent.rows.Count == 0)
-                {
-                    return;
-                }
 
                 var heightSoFar = 0.0;
 
                 ctx.Translate(0, -OffsetFromFirstRow);
+                ctx.Save();
                 var i = FirstRowToDisplay;
                 while(i < parent.rows.Count && heightSoFar - OffsetFromFirstRow < Bounds.Height)
                 {
@@ -458,6 +475,9 @@ namespace Terminal
                     ctx.Translate(0, height);
                     i++;
                 }
+                ctx.Restore();
+
+                parent.cursor.Draw(ctx, parent.layoutParameters);
             }
 
             private readonly Terminal parent;

@@ -5,6 +5,7 @@
 //
 using System;
 using Xwt;
+using Xwt.Drawing;
 
 namespace Terminal
 {
@@ -15,6 +16,20 @@ namespace Terminal
             var tmp = a;
             a = b;
             b = tmp;
+        }
+
+        public static Size GetCharSizeFromLayoutParams(ILayoutParameters parameters)
+        {
+            var textLayout = GetTextLayoutFromLayoutParams(parameters);
+            textLayout.Text = "a\na";
+            return new Size(textLayout.GetCoordinateFromIndex(1).X, textLayout.GetCoordinateFromIndex(3).Y);
+        }
+
+        public static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)
+        {
+            var result = new TextLayout();
+            result.Font = parameters.Font;
+            return result;
         }
     }
 }

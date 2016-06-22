@@ -47,6 +47,8 @@
     <Compile Include="ClipboardData.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="SelectionDirection.cs" />
+    <Compile Include="Cursor.cs" />
+    <Compile Include="IntegerPosition.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

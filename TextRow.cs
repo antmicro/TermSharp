@@ -29,7 +29,7 @@ namespace Terminal
         {
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
-            charWidth = CharWidthCache.GetValue(parameters);
+            charWidth = CharSizeCache.GetValue(parameters).Width;
             return lineSize.Height * Math.Ceiling(content.Length * charWidth / lineSize.Width);
         }
 
@@ -101,25 +101,11 @@ namespace Terminal
             }
         }
 
-        private static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)
-        {
-            var result = new TextLayout();
-            result.Font = parameters.Font;
-            return result;
-        }
-
         private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
         {
-            var textLayout = GetTextLayoutFromLayoutParams(parameters);
+            var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
             textLayout.Text = "a\na";
             return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
-        }
-
-        private static double GetCharWidthFromLayoutParams(ILayoutParameters parameters)
-        {
-            var textLayout = GetTextLayoutFromLayoutParams(parameters);
-            textLayout.Text = "a";
-            return textLayout.GetCoordinateFromIndex(1).X;
         }
 
         private double charWidth;
@@ -128,9 +114,9 @@ namespace Terminal
         private string selectedContent;
         private readonly string content;
 
-        private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(GetTextLayoutFromLayoutParams);
+        private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
         private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(GetLineSizeFromLayoutParams);
-        private static readonly SimpleCache<ILayoutParameters, double> CharWidthCache = new SimpleCache<ILayoutParameters, double>(GetCharWidthFromLayoutParams);
+        private static readonly SimpleCache<ILayoutParameters, Size> CharSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
     }
 }
 
