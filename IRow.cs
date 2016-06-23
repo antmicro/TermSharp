@@ -13,7 +13,9 @@ namespace Terminal
     {
         double PrepareForDrawing(ILayoutParameters parameters);
         void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection);
+        void DrawCursor(Context ctx, int offset);
         void FillClipboardData(ClipboardData data);
+        int MaxOffset { get; }
     }
 }
 

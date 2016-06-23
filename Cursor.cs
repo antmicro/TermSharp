@@ -12,27 +12,11 @@ namespace Terminal
 {
     public sealed class Cursor
     {
-        internal Cursor(Terminal.TerminalCanvas canvas, Func<int, double> rowHeightCallback)
+        internal Cursor(Terminal.TerminalCanvas canvas)
         {
-            this.rowHeightCallback = rowHeightCallback;
             this.canvas = canvas;
             BlinkingRate = TimeSpan.FromMilliseconds(300);
             HandleBlinkingAsync();
-        }
-
-        public void Draw(Context ctx, ILayoutParameters layoutParams)
-        {
-            if(!blinkState)
-            {
-                return;
-            }
-            ctx.Save();
-            var charSize = CharSizeCache.GetValue(layoutParams);
-            ctx.SetColor(Colors.White);
-            ctx.MoveTo(0, 0);
-            ctx.Rectangle(new Rectangle(Position.X * charSize.Width, rowHeightCallback(Position.Y), charSize.Width, charSize.Height));
-            ctx.Fill();
-            ctx.Restore();
         }
 
         public void StayOnForNBlinks(int n)
@@ -46,6 +30,14 @@ namespace Terminal
 
         public TimeSpan BlinkingRate { get; set; }
 
+        internal bool BlinkState
+        {
+            get
+            {
+                return blinkState;
+            }
+        }
+
         private async void HandleBlinkingAsync()
         {
             while(true)
@@ -57,17 +49,14 @@ namespace Terminal
                     continue;
                 }
                 blinkState = !blinkState;
-                canvas.QueueDraw();
+                canvas.QueueDraw(); // TODO: only if cursor is visible
             }
         }
 
         private int blinkWaitRounds;
         private bool blinkState;
 
-        private readonly Func<int, double> rowHeightCallback;
         private readonly Terminal.TerminalCanvas canvas;
-
-        private static readonly SimpleCache<ILayoutParameters, Size> CharSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
     }
 }
 

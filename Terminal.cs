@@ -25,7 +25,7 @@ namespace Terminal
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
             canvas = new TerminalCanvas(this);
-            cursor = new Cursor(canvas, GetRowHeightFromScreenIndex);
+            cursor = new Cursor(canvas);
             PackStart(canvas, true, true);
             scrollbar = new VScrollbar();
             scrollbar.Sensitive = false;
@@ -53,7 +53,6 @@ namespace Terminal
 
             scrollbar.Sensitive = GetMaximumHeight() > canvas.Bounds.Height;
 
-            scrollbar.PageSize = canvas.Bounds.Height;
             scrollbar.UpperValue = GetMaximumHeight();
             if(weWereAtEnd)
             {
@@ -84,11 +83,26 @@ namespace Terminal
             return result;
         }
 
+        public IRow GetScreenRow(int screenPosition)
+        {
+            return rows[GetScreenRowId(screenPosition)];
+        }
+
         public int Count
         {
             get
             {
                 return rows.Count;
+            }
+        }
+
+        public int ScreenRowsCount
+        {
+            get
+            {
+                double unused;
+                var firstRowNo = FindRowIndexAtPosition(GetMaximumScrollbarValue(), out unused);
+                return Count - firstRowNo;
             }
         }
 
@@ -207,13 +221,11 @@ namespace Terminal
                 RebuildHeightMap(true);
             }
 
-            scrollbar.PageSize = canvas.Bounds.Height;
             scrollbar.UpperValue = GetMaximumHeight();
 
             // difference between old and new position of the first displayed row:
             var diff = GetStartHeightOfTheRow(firstDisplayedRowIndex) - oldPosition;
             SetScrollbarValue(oldScrollbarValue + diff);
-
             canvas.QueueDraw();
         }
 
@@ -274,6 +286,8 @@ namespace Terminal
 
         private bool RebuildHeightMap(bool continueEvenIfLongTask = true)
         {
+            var oldFirstScreenRow = GetScreenRowId(0);
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             double[] newHeightMap;
@@ -298,6 +312,12 @@ namespace Terminal
             }
             heightMap = newHeightMap;
             unfinishedHeightMap = null;
+
+            scrollbar.PageSize = canvas.Bounds.Height; // we update it here to get new value on GetScreenRowId (it depends on height map and this value)
+            var firstScreenRow = GetScreenRowId(0);
+            var diff = firstScreenRow - oldFirstScreenRow;
+            cursor.Position = cursor.Position.ShiftedByY(-diff);
+            
             return true;
         }
 
@@ -333,15 +353,6 @@ namespace Terminal
             return heightMap[heightMap.Length - 1];
         }
 
-        private double GetRowHeightFromScreenIndex(int index)
-        {
-            if(index == 0)
-            {
-                return 0;
-            }
-            return heightMap[index - 1];
-        }
-
         private int FindRowIndexAtPosition(double position, out double rowStart)
         {
             var result = Array.BinarySearch(heightMap, position);
@@ -361,17 +372,10 @@ namespace Terminal
             return result;
         }
 
-        private IEnumerable<IRow> EnumerateRowsFromPosition(double position)
+        private int GetScreenRowId(int screenPosition)
         {
-            var startingIndex = Array.BinarySearch(heightMap, position);
-            if(startingIndex < 0)
-            {
-                startingIndex = ~startingIndex;
-            }
-            for(var i = startingIndex - 1; i >= 0; i--)
-            {
-                yield return rows[i];
-            }
+            double unused;
+            return FindRowIndexAtPosition(GetMaximumScrollbarValue(), out unused) + screenPosition;
         }
 
         private double[] heightMap;
@@ -435,6 +439,7 @@ namespace Terminal
                 ctx.Translate(0, -OffsetFromFirstRow);
                 ctx.Save();
                 var i = FirstRowToDisplay;
+                var cursorRow = parent.GetScreenRowId(parent.Cursor.Position.Y);
                 while(i < parent.rows.Count && heightSoFar - OffsetFromFirstRow < Bounds.Height)
                 {
                     var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
@@ -469,6 +474,10 @@ namespace Terminal
 
                     ctx.Save();
                     parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection);
+                    if(i == cursorRow && parent.Cursor.BlinkState)
+                    {
+                        parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X);
+                    }
                     ctx.Restore();
 
                     heightSoFar += height;
@@ -476,8 +485,6 @@ namespace Terminal
                     i++;
                 }
                 ctx.Restore();
-
-                parent.cursor.Draw(ctx, parent.layoutParameters);
             }
 
             private readonly Terminal parent;

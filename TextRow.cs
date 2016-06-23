@@ -30,7 +30,7 @@ namespace Terminal
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
-            return lineSize.Height * Math.Ceiling(content.Length * charWidth / lineSize.Width);
+            return lineSize.Height * Math.Ceiling((content.Length == 0 ? 1 : content.Length) * charWidth / lineSize.Width);
         }
 
         public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection)
@@ -93,6 +93,16 @@ namespace Terminal
             textLayout.ClearAttributes();
         }
 
+        public void DrawCursor(Context ctx, int offset)
+        {
+            MaxOffset = (int)(lineSize.Width / charWidth);
+            var column = offset % MaxOffset;
+            var row = offset / MaxOffset;
+            ctx.SetColor(Colors.White);
+            ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
+            ctx.Fill();
+        }
+
         public void FillClipboardData(ClipboardData data)
         {
             if(selectedContent != null)
@@ -100,6 +110,20 @@ namespace Terminal
                 data.AppendText(selectedContent);
             }
         }
+
+        public string Content
+        {
+            get
+            {
+                return content;
+            }
+            set
+            {
+                content = value;
+            }
+        }
+
+        public int MaxOffset { get; private set; }
 
         private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
         {
@@ -112,7 +136,7 @@ namespace Terminal
         private Size lineSize;
         private TextLayout textLayout;
         private string selectedContent;
-        private readonly string content;
+        private string content;
 
         private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
         private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(GetLineSizeFromLayoutParams);
