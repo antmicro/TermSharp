@@ -25,7 +25,7 @@ namespace Terminal
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
             canvas = new TerminalCanvas(this);
-            cursor = new Cursor(canvas);
+            cursor = new Cursor(this, canvas);
             PackStart(canvas, true, true);
             scrollbar = new VScrollbar();
             scrollbar.Sensitive = false;
@@ -48,6 +48,7 @@ namespace Terminal
             rowsGeneration++;
             var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
             rows.Add(row);
+            row.PrepareForDrawing(layoutParameters);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
             canvas.QueueDraw();
 

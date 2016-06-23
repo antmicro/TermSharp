@@ -30,6 +30,7 @@ namespace Terminal
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
+            MaxOffset = (int)(lineSize.Width / charWidth);
             return lineSize.Height * Math.Ceiling((content.Length == 0 ? 1 : content.Length) * charWidth / lineSize.Width);
         }
 
@@ -95,7 +96,6 @@ namespace Terminal
 
         public void DrawCursor(Context ctx, int offset)
         {
-            MaxOffset = (int)(lineSize.Width / charWidth);
             var column = offset % MaxOffset;
             var row = offset / MaxOffset;
             ctx.SetColor(Colors.White);
@@ -123,7 +123,7 @@ namespace Terminal
             }
         }
 
-        public int MaxOffset { get; private set; }
+        public int MaxOffset { get; set; }
 
         private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
         {

@@ -12,8 +12,9 @@ namespace Terminal
 {
     public sealed class Cursor
     {
-        internal Cursor(Terminal.TerminalCanvas canvas)
+        internal Cursor(Terminal terminal, Terminal.TerminalCanvas canvas)
         {
+            this.terminal = terminal;
             this.canvas = canvas;
             BlinkingRate = TimeSpan.FromMilliseconds(300);
             HandleBlinkingAsync();
@@ -26,7 +27,34 @@ namespace Terminal
             canvas.QueueDraw();
         }
 
-        public IntegerPosition Position { get; set; }
+        public IntegerPosition Position
+        {
+            get
+            {
+                return position;
+            }
+            set
+            {
+                if(value.Y < 0)
+                {
+                    value = value.WithY(0);
+                }
+                if(value.Y >= terminal.ScreenRowsCount)
+                {
+                    value = value.WithY(terminal.ScreenRowsCount - 1);
+                }
+                if(value.X < 0)
+                {
+                    value = value.WithX(0);
+                }
+                var row = terminal.GetScreenRow(value.Y);
+                if(value.X > row.MaxOffset)
+                {
+                    value = value.WithX(row.MaxOffset);
+                }
+                position = value;
+            }
+        }
 
         public TimeSpan BlinkingRate { get; set; }
 
@@ -55,7 +83,9 @@ namespace Terminal
 
         private int blinkWaitRounds;
         private bool blinkState;
+        private IntegerPosition position;
 
+        private readonly Terminal terminal;
         private readonly Terminal.TerminalCanvas canvas;
     }
 }
