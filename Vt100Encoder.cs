@@ -14,11 +14,6 @@ namespace Terminal
         public Vt100Encoder(Action<byte> dataCallback)
         {
             this.dataCallback = dataCallback;
-            directlyPassedKeys = new HashSet<Key>
-            {
-                Key.K1, Key.K2, Key.K3, Key.K4, Key.K5, Key.K6, Key.K7, Key.K8, Key.K9, Key.K0,
-                Key.Space
-            };
             keyHandlers = new Dictionary<Key, byte[]>
             {
                 { Key.Return, new [] { (byte)ControlByte.CarriageReturn } },
@@ -33,7 +28,7 @@ namespace Terminal
 
         public void Feed(Key key, ModifierKeys modifiers)
         {
-            if((key >= Key.A && key <= Key.Z) || (key >= Key.a && key <= Key.z) || directlyPassedKeys.Contains(key))
+            if((key >= Key.Space && key <= (Key)126))
             {
                 dataCallback((byte)key);
                 return;
@@ -48,7 +43,6 @@ namespace Terminal
             }
         }
 
-        private readonly HashSet<Key> directlyPassedKeys;
         private readonly Action<byte> dataCallback;
         private readonly Dictionary<Key, byte[]> keyHandlers;
     }
