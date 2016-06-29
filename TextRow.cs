@@ -94,13 +94,20 @@ namespace Terminal
             textLayout.ClearAttributes();
         }
 
-        public void DrawCursor(Context ctx, int offset)
+        public void DrawCursor(Context ctx, int offset, bool focused)
         {
             var column = offset % MaxOffset;
             var row = offset / MaxOffset;
             ctx.SetColor(Colors.White);
             ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
-            ctx.Fill();
+            if(focused)
+            {
+                ctx.Fill();
+            }
+            else
+            {
+                ctx.Stroke();
+            }
         }
 
         public void FillClipboardData(ClipboardData data)
@@ -109,6 +116,17 @@ namespace Terminal
             {
                 data.AppendText(selectedContent);
             }
+        }
+
+        public void Erase(int from, int to)
+        {
+            var builder = new StringBuilder(content);
+            to = Math.Min(to, content.Length - 1);
+            for(var i = from; i <= to; i++)
+            {
+                builder[i] = ' ';
+            }
+            content = builder.ToString();
         }
 
         public string Content

@@ -56,6 +56,16 @@ namespace Terminal
             }
         }
 
+        public IntegerPosition MaximalPosition
+        {
+            get
+            {
+                var maxY = terminal.ScreenRowsCount - 1;
+                var maxX = terminal.GetScreenRow(maxY).MaxOffset;
+                return new IntegerPosition(maxX, maxY);
+            }
+        }
+
         public TimeSpan BlinkingRate { get; set; }
 
         internal bool BlinkState

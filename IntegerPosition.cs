@@ -44,6 +44,29 @@ namespace Terminal
             return string.Format("[X={0}, Y={1}]", X, Y);
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is IntegerPosition && this == (IntegerPosition)obj;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return 23 * X + Y;
+            }
+        }
+
+        public static bool operator ==(IntegerPosition a, IntegerPosition b)
+        {
+            return a.X == b.X && a.Y == b.Y;
+        }
+
+        public static bool operator !=(IntegerPosition a, IntegerPosition b)
+        {
+            return !(a == b);
+        }
+
         public int X { get; private set; }
         public int Y { get; private set; }
     }

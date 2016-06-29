@@ -36,11 +36,13 @@ namespace Terminal
             canvas.ButtonPressed += OnCanvasButtonPressed;
             canvas.ButtonReleased += OnCanvasButtonReleased;
             canvas.MouseMoved += OnCanvasMouseMoved;
+
             scrollbar.StepIncrement = 15; // TODO
 
             scrollbar.ValueChanged += OnScrollbarValueChanged;
             autoscrollEnabled = new TaskCompletionSource<bool>();
             HandleAutoscrollAsync();
+            canvas.CanGetFocus = true;
         }
 
         public void AppendRow(IRow row)
@@ -89,6 +91,16 @@ namespace Terminal
             return rows[GetScreenRowId(screenPosition)];
         }
 
+        public void EraseScreen(IntegerPosition from, IntegerPosition to)
+        {
+            for(var rowId = from.Y; rowId <= to.Y; rowId++)
+            {
+                var row = GetScreenRow(rowId);
+                row.Erase(rowId == from.Y ? from.X : 0, rowId == to.Y ? to.X : row.MaxOffset);
+            }
+            canvas.QueueDraw();
+        }
+
         public int Count
         {
             get
@@ -129,6 +141,18 @@ namespace Terminal
             }
         }
 
+        public new event EventHandler<KeyEventArgs> KeyPressed
+        {
+            add
+            {
+                canvas.KeyPressed += value;
+            }
+            remove
+            {
+                canvas.KeyPressed -= value;
+            }
+        }
+
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {
             double rowOffset;
@@ -140,6 +164,7 @@ namespace Terminal
 
         private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
         {
+            canvas.SetFocus();
             var position = e.Position;
             position.Y += scrollbar.Value;
             currentScrollStart = position;
@@ -475,9 +500,9 @@ namespace Terminal
 
                     ctx.Save();
                     parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection);
-                    if(i == cursorRow && parent.Cursor.BlinkState)
+                    if(i == cursorRow && (parent.Cursor.BlinkState || !HasFocus))
                     {
-                        parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X);
+                        parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X, HasFocus);
                     }
                     ctx.Restore();
 

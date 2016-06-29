@@ -49,6 +49,11 @@
     <Compile Include="SelectionDirection.cs" />
     <Compile Include="Cursor.cs" />
     <Compile Include="IntegerPosition.cs" />
+    <Compile Include="Vt100Decoder.cs" />
+    <Compile Include="ControlByte.cs" />
+    <Compile Include="Vt100DecoderCommands.cs" />
+    <Compile Include="ByteUtf8Decoder.cs" />
+    <Compile Include="Vt100Encoder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

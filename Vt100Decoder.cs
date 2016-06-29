@@ -27,10 +27,13 @@ namespace Terminal
             {
                 HandleAnsiCode(c);
             }
+            else if(ControlByte.Backspace == (ControlByte)c)
+            {
+                cursor.Position = cursor.Position.ShiftedByX(-1);
+            }
             else if(ControlByte.Escape == (ControlByte)c)
             {
                 inAnsiCode = true;
-                return;
             }
             else if(ControlByte.LineFeed == (ControlByte)c)
             {
@@ -39,10 +42,23 @@ namespace Terminal
                 newPosition = newPosition.ShiftedByY(1);
                 cursor.Position = newPosition;
             }
+            else if(ControlByte.CarriageReturn == (ControlByte)c)
+            {
+                cursor.Position = cursor.Position.WithX(1);
+            }
+            else if(ControlByte.Bell == (ControlByte)c)
+            {
+                Console.WriteLine("Bell"); // TODO
+            }
             else
             {
+                if(char.IsControl(c))
+                {
+                    throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
+                }
                 HandleRegularCharacter(c);
             }
+            terminal.Redraw();
         }
 
         public void Feed(string str)
@@ -83,7 +99,7 @@ namespace Terminal
             {
                 if(ControlByte.Csi != (ControlByte)c)
                 {
-                    throw new NotImplementedException();
+                    throw new NotImplementedException("Escape character within ANSI code.");
                 }
                 csiCodeData = new StringBuilder();
                 return;
@@ -105,7 +121,7 @@ namespace Terminal
                 }
                 else
                 {
-                    throw new NotImplementedException(); // TODO
+                    throw new NotImplementedException(string.Format("Unimplemented ANSI code {0}.", c));
                 }
             }
             else
@@ -143,7 +159,12 @@ namespace Terminal
                 }
                 set
                 {
-                    parent.terminal.Cursor.Position = value.ShiftedBy(-1, -1);
+                    var valueToSet = value.ShiftedBy(-1, -1);
+                    if(valueToSet != parent.terminal.Cursor.Position)
+                    {
+                        parent.terminal.Cursor.Position = valueToSet;
+                        parent.terminal.Cursor.StayOnForNBlinks(1);
+                    }
                 }
             }
 
