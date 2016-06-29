@@ -76,13 +76,7 @@ namespace Terminal
             {
                 throw new InvalidOperationException(); // TODO
             }
-            var builder = new StringBuilder(textRow.Content, where.X);
-            for(var i = builder.Length; i < where.X; i++)
-            {
-                builder.Append(' ');
-            }
-            builder[where.X - 1] = what;
-            textRow.Content = builder.ToString();
+            textRow.InsertCharacterAt(where.X - 1, what);
         }
 
         private void HandleRegularCharacter(char c)

@@ -129,6 +129,17 @@ namespace Terminal
             content = builder.ToString();
         }
 
+        public void InsertCharacterAt(int x, char what)
+        {
+            var builder = new StringBuilder(content, x);
+            for(var i = builder.Length; i <= x; i++)
+            {
+                builder.Append(' ');
+            }
+            builder[x] = what;
+            content = builder.ToString();
+        }
+
         public string Content
         {
             get
