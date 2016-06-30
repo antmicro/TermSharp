@@ -24,6 +24,12 @@ namespace Terminal
                 { Key.Down, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'B' } },
                 { Key.Right, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'C' } },
                 { Key.Left, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'D' } },
+                { Key.Home, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'1', (byte)'~' } },
+                { Key.Insert, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'2', (byte)'~' } },
+                { Key.Delete, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'3', (byte)'~' } },
+                { Key.End, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'4', (byte)'~' } },
+                { Key.PageUp, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'5', (byte)'~' } },
+                { Key.PageDown, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'6', (byte)'~' } },
             };
         }
 
