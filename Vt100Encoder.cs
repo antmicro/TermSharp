@@ -51,7 +51,11 @@ namespace Terminal
 
         private void HandleControlModifier(Key key)
         {
-            throw new NotImplementedException();
+            if(key >= Key.a && key <= Key.z)
+            {
+                key -= 32;
+            }
+            dataCallback((byte)(key - Key.At));
         }
 
         private readonly Action<byte> dataCallback;
