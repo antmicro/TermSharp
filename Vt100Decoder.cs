@@ -62,7 +62,15 @@ namespace Terminal
             {
                 if(char.IsControl(c))
                 {
-                    throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
+                    if(c < 32)
+                    {
+                        Feed("^");
+                        Feed((char)(c + 64));
+                    }
+                    else
+                    {
+                        throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
+                    }
                 }
                 HandleRegularCharacter(c);
             }
