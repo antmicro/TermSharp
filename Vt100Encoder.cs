@@ -61,7 +61,14 @@ namespace Terminal
             {
                 key -= 32;
             }
-            dataCallback((byte)(key - Key.At));
+            if(key >= Key.At && key <= (Key)95)
+            {
+                dataCallback((byte)(key - Key.At));
+            }
+            else
+            {
+                throw new NotImplementedException("Unimplemented key with control modifier.");
+            }
         }
 
         private readonly Action<byte> dataCallback;
