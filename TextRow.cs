@@ -126,6 +126,7 @@ namespace Terminal
             {
                 builder[i] = ' ';
             }
+            // TODO: maybe trim trails
             content = builder.ToString();
         }
 

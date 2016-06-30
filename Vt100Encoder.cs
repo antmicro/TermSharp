@@ -16,6 +16,7 @@ namespace Terminal
             this.dataCallback = dataCallback;
             keyHandlers = new Dictionary<Key, byte[]>
             {
+                { Key.Escape, new [] { (byte)ControlByte.Escape } },
                 { Key.Return, new [] { (byte)ControlByte.CarriageReturn } },
                 { Key.BackSpace, new [] { (byte)ControlByte.Backspace } },
                 { Key.Tab, new [] { (byte)ControlByte.HorizontalTab } },
@@ -28,6 +29,11 @@ namespace Terminal
 
         public void Feed(Key key, ModifierKeys modifiers)
         {
+            if((modifiers & ModifierKeys.Control) != 0)
+            {
+                HandleControlModifier(key);
+                return;
+            }
             if((key >= Key.Space && key <= (Key)126))
             {
                 dataCallback((byte)key);
@@ -41,6 +47,11 @@ namespace Terminal
                     dataCallback(b);
                 }
             }
+        }
+
+        private void HandleControlModifier(Key key)
+        {
+            throw new NotImplementedException();
         }
 
         private readonly Action<byte> dataCallback;

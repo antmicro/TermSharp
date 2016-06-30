@@ -12,13 +12,14 @@ namespace Terminal
 {
     public sealed partial class Vt100Decoder
     {
-        public Vt100Decoder(Terminal terminal)
+        public Vt100Decoder(Terminal terminal, Action<byte> responseCallback)
         {
             this.terminal = terminal;
+            terminal.AppendRow(new TextRow("")); // TODO
+            this.responseCallback = responseCallback;
             commands = new Dictionary<char, Action>();
             InitializeCommands();
             cursor = new Cursor(this);
-            terminal.AppendRow(new TextRow(""));
         }
 
         public void Feed(char c)
@@ -37,7 +38,10 @@ namespace Terminal
             }
             else if(ControlByte.LineFeed == (ControlByte)c)
             {
-                terminal.AppendRow(new TextRow(string.Empty));
+                if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
+                {
+                    terminal.AppendRow(new TextRow(string.Empty));
+                }
                 var newPosition = cursor.Position.WithX(1);
                 newPosition = newPosition.ShiftedByY(1);
                 cursor.Position = newPosition;
@@ -49,6 +53,10 @@ namespace Terminal
             else if(ControlByte.Bell == (ControlByte)c)
             {
                 Console.WriteLine("Bell"); // TODO
+            }
+            else if(ControlByte.HorizontalTab == (ControlByte)c)
+            {
+                HandleRegularCharacter(' ');
             }
             else
             {
@@ -106,6 +114,7 @@ namespace Terminal
             {
                 if(commands.ContainsKey(c))
                 {
+                    
                     // let's extract parameters
                     var splitted = csiCodeData.ToString().Split(';');
                     currentParams = splitted.Select(x => string.IsNullOrEmpty(x) ? (int?)null : int.Parse(x)).ToArray();
@@ -120,7 +129,12 @@ namespace Terminal
             }
             else
             {
-                csiCodeData.Append(c);
+                // for the moment question marks are simply removed
+                // because they do not mean a thing there (if anywhere)
+                if(c != '?')
+                {
+                    csiCodeData.Append(c);
+                }
             }
         }
 
@@ -129,6 +143,7 @@ namespace Terminal
         private StringBuilder csiCodeData;
         private readonly Terminal terminal;
         private readonly Cursor cursor;
+        private readonly Action<byte> responseCallback;
 
         private sealed class Cursor
         {
