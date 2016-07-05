@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Xwt.Drawing;
 
 namespace Terminal
 {
@@ -24,6 +25,11 @@ namespace Terminal
 
         public void Feed(char c)
         {
+            if(ignoreNextChar)
+            {
+                ignoreNextChar = false;
+                return;
+            }
             if(inAnsiCode)
             {
                 HandleAnsiCode(c);
@@ -85,6 +91,10 @@ namespace Terminal
             }
         }
 
+        public Color? CurrentForeground { get; set; }
+
+        public Color? CurrentBackground { get; set; }
+
         private void InsertCharacterAt(IntegerPosition where, char what)
         {
             var textRow = terminal.GetScreenRow(where.Y - 1) as TextRow;
@@ -92,7 +102,7 @@ namespace Terminal
             {
                 throw new InvalidOperationException(); // TODO
             }
-            textRow.InsertCharacterAt(where.X - 1, what);
+            textRow.InsertCharacterAt(where.X - 1, what, CurrentForeground, CurrentBackground);
         }
 
         private void HandleRegularCharacter(char c)
@@ -109,14 +119,16 @@ namespace Terminal
             {
                 if(ControlByte.Csi != (ControlByte)c)
                 {
-                    throw new NotImplementedException("Escape character within ANSI code.");
+                    HandleNonCsiCode(c);
+                    inAnsiCode = false;
+                    return;
                 }
                 csiCodeData = new StringBuilder();
                 return;
             }
             if(ControlByte.Escape == (ControlByte)c)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException("Escape character within ANSI code.");
             }
             if(char.IsLetter(c))
             {
@@ -128,6 +140,7 @@ namespace Terminal
                     currentParams = splitted.Select(x => string.IsNullOrEmpty(x) ? (int?)null : int.Parse(x)).ToArray();
                     commands[c]();
                     inAnsiCode = false;
+                    privateModeCode = false;
                     csiCodeData = null;
                 }
                 else
@@ -137,17 +150,57 @@ namespace Terminal
             }
             else
             {
-                // for the moment question marks are simply removed
-                // because they do not mean a thing there (if anywhere)
                 if(c != '?')
                 {
                     csiCodeData.Append(c);
                 }
+                else
+                {
+                    privateModeCode = true;
+                }
             }
         }
 
+        private void HandleNonCsiCode(char c)
+        {
+            switch(c)
+            {
+            case 'c':
+                HandleTerminalReset();
+                break;
+            case '(':
+                // G0 character set, we ignore this, at least for now
+                ignoreNextChar = true;
+                break;
+            case '7':
+                savedCursorPosition = cursor.Position;
+                break;
+            case '8':
+                cursor.Position = savedCursorPosition;
+                break;
+            default:
+                throw new NotImplementedException(string.Format("Unimplemented non-CSI code '{0}'.", c));
+            }
+        }
+
+        private void HandleTerminalReset()
+        {
+            terminal.Cursor.Enabled = true;
+            CurrentForeground = terminal.DefaultForeground;
+            CurrentBackground = terminal.DefaultBackground;
+            var screenRows = terminal.ScreenRowsCount;
+            for(var i = 0; i < screenRows; i++)
+            {
+                terminal.AppendRow(new TextRow(string.Empty));
+            }
+            terminal.Cursor.Position = new IntegerPosition();
+        }
+
+        private bool ignoreNextChar;
+        private IntegerPosition savedCursorPosition;
         private int?[] currentParams;
         private bool inAnsiCode;
+        private bool privateModeCode;
         private StringBuilder csiCodeData;
         private readonly Terminal terminal;
         private readonly Cursor cursor;

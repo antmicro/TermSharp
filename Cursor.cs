@@ -68,6 +68,8 @@ namespace Terminal
 
         public TimeSpan BlinkingRate { get; set; }
 
+        public bool Enabled { get; set; }
+
         internal bool BlinkState
         {
             get

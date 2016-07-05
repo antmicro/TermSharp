@@ -6,6 +6,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Xwt;
 using Xwt.Drawing;
@@ -27,6 +28,7 @@ namespace Terminal
 
         public double PrepareForDrawing(ILayoutParameters parameters)
         {
+            defaultForeground = parameters.DefaultForeground;
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
@@ -36,12 +38,12 @@ namespace Terminal
 
         public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection)
         {
-            ctx.SetColor(Colors.White);
+            ctx.SetColor(defaultForeground);
             textLayout.Text = content;
             var newLinesAt = new List<int> { 0 };
+            var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
             if(textLayout.Text.Length > 1)
             {
-                var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
                 var result = new StringBuilder();
                 var counter = 0;
                 result.Append(textLayout.Text.Substring(result.Length, Math.Min(charsOnLine, textLayout.Text.Length - result.Length)));
@@ -55,6 +57,8 @@ namespace Terminal
                 textLayout.Text = result.ToString();
             }
 
+            var foregroundColors = specialForegrounds != null ? specialForegrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
+            var backgroundColors = specialBackgrounds != null ? specialBackgrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
             if(selectedArea != default(Rectangle))
             {
                 var textWithNewLines = textLayout.Text;
@@ -81,13 +85,25 @@ namespace Terminal
                 startIndex = Math.Max(0, Math.Min(textWithNewLines.Length, startIndex));
                 endIndex = Math.Max(0, Math.Min(textWithNewLines.Length, endIndex));
 
-                textLayout.SetBackground(Colors.White, startIndex, endIndex - startIndex);
-                textLayout.SetForeground(Colors.Black, startIndex, endIndex - startIndex);
+                for(var i = startIndex; i < endIndex; i++)
+                {
+                    foregroundColors[i] = (specialForegrounds != null && specialForegrounds.ContainsKey(i)) ? specialForegrounds[i].WithIncreasedLight(0.2) : Colors.Black;
+                    backgroundColors[i] = Colors.LightSlateGray;
+                }
                 selectedContent = textWithNewLines.Substring(startIndex, endIndex - startIndex);
             }
             else
             {
                 selectedContent = null;
+            }
+
+            foreach(var entry in GetColorRanges(foregroundColors))
+            {
+                textLayout.SetForeground(entry.Item3, entry.Item1, entry.Item2);
+            }
+            foreach(var entry in GetColorRanges(backgroundColors))
+            {
+                textLayout.SetBackground(entry.Item3, entry.Item1, entry.Item2);
             }
 
             ctx.DrawTextLayout(textLayout, 0, 0);
@@ -98,7 +114,7 @@ namespace Terminal
         {
             var column = offset % MaxOffset;
             var row = offset / MaxOffset;
-            ctx.SetColor(Colors.White);
+            ctx.SetColor(defaultForeground);
             ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
             if(focused)
             {
@@ -118,20 +134,62 @@ namespace Terminal
             }
         }
 
-        public void Erase(int from, int to)
+        public void Erase(int from, int to, Color? background)
         {
             var builder = new StringBuilder(content);
             to = Math.Min(to, content.Length - 1);
             for(var i = from; i <= to; i++)
             {
                 builder[i] = ' ';
+                if(background.HasValue)
+                {
+                    CheckDictionary(ref specialBackgrounds);
+                    specialBackgrounds[i] = background.Value;
+                }
+                else
+                {
+                    if(specialBackgrounds != null)
+                    {
+                        specialBackgrounds.Remove(i);
+                    }
+                }
+                if(specialForegrounds != null)
+                {
+                    specialForegrounds.Remove(i);
+                }
             }
             // TODO: maybe trim trails
             content = builder.ToString();
         }
 
-        public void InsertCharacterAt(int x, char what)
+        public void InsertCharacterAt(int x, char what, Color? foreground, Color? background)
         {
+            if(foreground.HasValue)
+            {
+                CheckDictionary(ref specialForegrounds);
+                specialForegrounds[x] = foreground.Value;
+            }
+            else
+            {
+                if(specialForegrounds != null)
+                {
+                    specialForegrounds.Remove(x);
+                }
+            }
+
+            if(background.HasValue)
+            {
+                CheckDictionary(ref specialBackgrounds);
+                specialBackgrounds[x] = background.Value;
+            }
+            else
+            {
+                if(specialBackgrounds != null)
+                {
+                    specialBackgrounds.Remove(x);
+                }
+            }
+
             var builder = new StringBuilder(content, x);
             for(var i = builder.Length; i <= x; i++)
             {
@@ -155,6 +213,14 @@ namespace Terminal
 
         public int MaxOffset { get; set; }
 
+        private void CheckDictionary(ref Dictionary<int, Color> dictionary)
+        {
+            if(dictionary == null)
+            {
+                dictionary = new Dictionary<int, Color>();
+            }
+        }
+
         private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
         {
             var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
@@ -162,11 +228,29 @@ namespace Terminal
             return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
         }
 
+        private static IEnumerable<Tuple<int, int, Color>> GetColorRanges(Dictionary<int, Color> entries)
+        {
+            var colors = entries.Values.Distinct();
+            foreach(var color in colors)
+            {
+                var entriesThisColor = new HashSet<int>(entries.Where(x => x.Value == color).Select(x => x.Key));
+                var begins = entriesThisColor.Where(x => !entriesThisColor.Contains(x - 1)).OrderBy(x => x).ToArray();
+                var ends = entriesThisColor.Where(x => !entriesThisColor.Contains(x + 1)).OrderBy(x => x).ToArray();
+                for(var i = 0; i < begins.Length; i++)
+                {
+                    yield return Tuple.Create(begins[i], ends[i] - begins[i] + 1, color);
+                }
+            }
+        }
+
         private double charWidth;
         private Size lineSize;
         private TextLayout textLayout;
         private string selectedContent;
         private string content;
+        private Color defaultForeground;
+        private Dictionary<int, Color> specialForegrounds;
+        private Dictionary<int, Color> specialBackgrounds;
 
         private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
         private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(GetLineSizeFromLayoutParams);

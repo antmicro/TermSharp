@@ -20,7 +20,9 @@ namespace Terminal
         {
             rows = new List<IRow>();
             heightMap = new double[0];
-            layoutParameters = new LayoutParameters(Font);
+            layoutParameters = new LayoutParameters(Font, Colors.White);
+            defaultBackground = Colors.Black;
+
             Margins = new Rectangle();
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
@@ -91,12 +93,12 @@ namespace Terminal
             return rows[GetScreenRowId(screenPosition)];
         }
 
-        public void EraseScreen(IntegerPosition from, IntegerPosition to)
+        public void EraseScreen(IntegerPosition from, IntegerPosition to, Color? background)
         {
             for(var rowId = from.Y; rowId <= to.Y; rowId++)
             {
                 var row = GetScreenRow(rowId);
-                row.Erase(rowId == from.Y ? from.X : 0, rowId == to.Y ? to.X : row.MaxOffset);
+                row.Erase(rowId == from.Y ? from.X : 0, rowId == to.Y ? to.X : row.MaxOffset, background);
             }
             canvas.QueueDraw();
         }
@@ -138,6 +140,31 @@ namespace Terminal
             get
             {
                 return cursor;
+            }
+        }
+
+        public Color DefaultForeground
+        {
+            get
+            {
+                return layoutParameters.DefaultForeground;
+            }
+            set
+            {
+                layoutParameters.DefaultForeground = value;
+            }
+        }
+
+        public Color DefaultBackground
+        {
+            get
+            {
+                return defaultBackground;
+            }
+            set
+            {
+                BackgroundColor = value;
+                defaultBackground = value;
             }
         }
 
@@ -412,6 +439,7 @@ namespace Terminal
         private Point lastMousePosition;
         private int autoscrollStep;
         private TaskCompletionSource<bool> autoscrollEnabled;
+        private Color defaultBackground;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
@@ -462,6 +490,12 @@ namespace Terminal
 
                 var heightSoFar = 0.0;
 
+                ctx.Save();
+                ctx.SetColor(parent.DefaultBackground);
+                ctx.Rectangle(new Rectangle(0, 0, Bounds.Width, Bounds.Height));
+                ctx.Fill();
+                ctx.Restore();
+
                 ctx.Translate(0, -OffsetFromFirstRow);
                 ctx.Save();
                 var i = FirstRowToDisplay;
@@ -500,7 +534,7 @@ namespace Terminal
 
                     ctx.Save();
                     parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection);
-                    if(i == cursorRow && (parent.Cursor.BlinkState || !HasFocus))
+                    if(parent.Cursor.Enabled && i == cursorRow && (parent.Cursor.BlinkState || !HasFocus))
                     {
                         parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X, HasFocus);
                     }
