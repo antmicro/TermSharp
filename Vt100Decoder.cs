@@ -173,10 +173,10 @@ namespace Terminal
                 ignoreNextChar = true;
                 break;
             case '7':
-                savedCursorPosition = cursor.Position;
+                SaveCursorPosition();
                 break;
             case '8':
-                cursor.Position = savedCursorPosition;
+                RestoreCursorPosition();
                 break;
             default:
                 throw new NotImplementedException(string.Format("Unimplemented non-CSI code '{0}'.", c));
@@ -198,6 +198,8 @@ namespace Terminal
 
         private bool ignoreNextChar;
         private IntegerPosition savedCursorPosition;
+        private Color? savedForeground;
+        private Color? savedBackground;
         private int?[] currentParams;
         private bool inAnsiCode;
         private bool privateModeCode;

@@ -190,8 +190,22 @@ namespace Terminal
             }
             var response = new List<byte>();
             response.AddRange(new[] { (byte)ControlByte.Escape, (byte)ControlByte.Csi });
-            response.AddRange(Encoding.ASCII.GetBytes(cursor.Position.Y.ToString() + ';' + cursor.Position.X.ToString()));
+            response.AddRange(Encoding.ASCII.GetBytes(cursor.Position.Y.ToString() + ';' + cursor.Position.X + 'R'));
             SendResponse(response);
+        }
+
+        private void SaveCursorPosition()
+        {
+            savedCursorPosition = cursor.Position;
+            savedForeground = CurrentForeground;
+            savedBackground = CurrentBackground;
+        }
+
+        private void RestoreCursorPosition()
+        {
+            cursor.Position = savedCursorPosition;
+            CurrentForeground = savedForeground;
+            CurrentBackground = savedBackground;
         }
 
         private void DeviceAttributes()
@@ -314,6 +328,8 @@ namespace Terminal
 
             commands.Add('m', SelectGraphicRendition);
             commands.Add('n', DeviceStatusReport);
+            commands.Add('s', SaveCursorPosition);
+            commands.Add('u', RestoreCursorPosition);
 
             commands.Add('h', SetMode);
             commands.Add('l', ResetMode);
