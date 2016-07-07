@@ -39,9 +39,9 @@ namespace Terminal
                 {
                     value = value.WithY(0);
                 }
-                if(value.Y >= terminal.ScreenRowsCount)
+                if(value.Y >= terminal.ScreenRowCount)
                 {
-                    value = value.WithY(terminal.ScreenRowsCount - 1);
+                    value = value.WithY(terminal.ScreenRowCount - 1);
                 }
                 if(value.X < 0)
                 {
@@ -60,7 +60,7 @@ namespace Terminal
         {
             get
             {
-                var maxY = terminal.ScreenRowsCount - 1;
+                var maxY = terminal.ScreenRowCount - 1;
                 var maxX = terminal.GetScreenRow(maxY).MaxOffset;
                 return new IntegerPosition(maxX, maxY);
             }

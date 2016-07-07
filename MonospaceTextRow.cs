@@ -13,9 +13,9 @@ using Xwt.Drawing;
 
 namespace Terminal
 {
-    public class TextRow : IRow
+    public class MonospaceTextRow : IRow
     {
-        public TextRow(string content)
+        public MonospaceTextRow(string content)
         {
 #if DEBUG
             if(content.Contains("\n"))

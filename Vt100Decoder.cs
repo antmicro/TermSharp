@@ -16,7 +16,6 @@ namespace Terminal
         public Vt100Decoder(Terminal terminal, Action<byte> responseCallback)
         {
             this.terminal = terminal;
-            terminal.AppendRow(new TextRow("")); // TODO
             this.responseCallback = responseCallback;
             commands = new Dictionary<char, Action>();
             InitializeCommands();
@@ -46,7 +45,7 @@ namespace Terminal
             {
                 if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
                 {
-                    terminal.AppendRow(new TextRow(string.Empty));
+                    terminal.AppendRow(new MonospaceTextRow(string.Empty));
                 }
                 var newPosition = cursor.Position.WithX(1);
                 newPosition = newPosition.ShiftedByY(1);
@@ -58,7 +57,11 @@ namespace Terminal
             }
             else if(ControlByte.Bell == (ControlByte)c)
             {
-                Console.WriteLine("Bell"); // TODO
+                var bellReceived = BellReceived;
+                if(bellReceived != null)
+                {
+                    bellReceived();
+                }
             }
             else if(ControlByte.HorizontalTab == (ControlByte)c)
             {
@@ -95,9 +98,11 @@ namespace Terminal
 
         public Color? CurrentBackground { get; set; }
 
+        public event Action BellReceived;
+
         private void InsertCharacterAt(IntegerPosition where, char what)
         {
-            var textRow = terminal.GetScreenRow(where.Y - 1) as TextRow;
+            var textRow = terminal.GetScreenRow(where.Y - 1) as MonospaceTextRow;
             if(textRow == null)
             {
                 throw new InvalidOperationException(); // TODO
@@ -188,10 +193,10 @@ namespace Terminal
             terminal.Cursor.Enabled = true;
             CurrentForeground = terminal.DefaultForeground;
             CurrentBackground = terminal.DefaultBackground;
-            var screenRows = terminal.ScreenRowsCount;
+            var screenRows = terminal.ScreenRowCount;
             for(var i = 0; i < screenRows; i++)
             {
-                terminal.AppendRow(new TextRow(string.Empty));
+                terminal.AppendRow(new MonospaceTextRow(string.Empty));
             }
             terminal.Cursor.Position = new IntegerPosition();
         }

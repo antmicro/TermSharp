@@ -161,7 +161,7 @@ namespace Terminal
         {
             var type = GetParamOrDefault(0, 0);
             var currentRow = terminal.GetScreenRow(terminal.Cursor.Position.Y);
-            var textRow = currentRow as TextRow;
+            var textRow = currentRow as MonospaceTextRow;
             if(textRow == null)
             {
                 throw new InvalidOperationException(); // TODO
