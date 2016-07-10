@@ -13,6 +13,7 @@ namespace Terminal
         Font Font { get; }
         double Width { get; }
         Color DefaultForeground { get; }
+        Color SelectionColor { get; }
     }
 }
 

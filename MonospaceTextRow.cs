@@ -31,6 +31,7 @@ namespace Terminal
         public double PrepareForDrawing(ILayoutParameters parameters)
         {
             defaultForeground = parameters.DefaultForeground;
+            selectionColor = parameters.SelectionColor;
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
@@ -92,7 +93,7 @@ namespace Terminal
                 for(var i = startIndex; i <= endIndex; i++)
                 {
                     foregroundColors[i] = (specialForegrounds != null && specialForegrounds.ContainsKey(i)) ? specialForegrounds[i].WithIncreasedLight(0.2) : Colors.Black;
-                    backgroundColors[i] = Colors.LightSlateGray;
+                    backgroundColors[i] = selectionColor;
                 }
                 selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex);
             }
@@ -291,6 +292,7 @@ namespace Terminal
         private string selectedContent;
         private string content;
         private Color defaultForeground;
+        private Color selectionColor;
         private int lengthInTextElements;
         private Dictionary<int, Color> specialForegrounds;
         private Dictionary<int, Color> specialBackgrounds;

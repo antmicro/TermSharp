@@ -20,7 +20,7 @@ namespace Terminal
         {
             rows = new List<IRow>();
             heightMap = new double[0];
-            layoutParameters = new LayoutParameters(Font, Colors.White);
+            layoutParameters = new LayoutParameters(Font, Colors.White, Colors.LightSlateGray);
             defaultBackground = Colors.Black;
 
             Margins = new Rectangle();
@@ -171,6 +171,18 @@ namespace Terminal
             {
                 BackgroundColor = value;
                 defaultBackground = value;
+            }
+        }
+
+        public Color SelectionColor
+        {
+            get
+            {
+                return layoutParameters.SelectionColor;
+            }
+            set
+            {
+                layoutParameters.SelectionColor = value;
             }
         }
 
