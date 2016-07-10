@@ -164,7 +164,7 @@ namespace Terminal
             var textRow = currentRow as MonospaceTextRow;
             if(textRow == null)
             {
-                throw new InvalidOperationException(); // TODO
+                throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
             }
             switch(type)
             {

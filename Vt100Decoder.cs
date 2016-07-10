@@ -20,6 +20,7 @@ namespace Terminal
             commands = new Dictionary<char, Action>();
             InitializeCommands();
             cursor = new Cursor(this);
+            CharReceivedBlinkDisabledRounds = 1;
         }
 
         public void Feed(string textElement)
@@ -98,6 +99,8 @@ namespace Terminal
 
         public Color? CurrentBackground { get; set; }
 
+        public int CharReceivedBlinkDisabledRounds { get; set; }
+
         public event Action BellReceived;
 
         private void InsertCharacterAt(IntegerPosition where, string what)
@@ -105,16 +108,16 @@ namespace Terminal
             var textRow = terminal.GetScreenRow(where.Y - 1) as MonospaceTextRow;
             if(textRow == null)
             {
-                throw new InvalidOperationException(); // TODO
+                throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
             }
-            textRow.InsertCharacterAt(where.X - 1, what.ToString(), CurrentForeground, CurrentBackground);
+            textRow.InsertCharacterAt(where.X - 1, what, CurrentForeground, CurrentBackground);
         }
 
         private void HandleRegularCharacter(string textElement)
         {
             InsertCharacterAt(cursor.Position, textElement);
             cursor.Position = cursor.Position.ShiftedByX(1);
-            terminal.Cursor.StayOnForNBlinks(1); // TODO: value
+            terminal.Cursor.StayOnForNBlinks(CharReceivedBlinkDisabledRounds);
             terminal.Redraw();
         }
 

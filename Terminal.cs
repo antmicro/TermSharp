@@ -38,13 +38,12 @@ namespace Terminal
             canvas.ButtonReleased += OnCanvasButtonReleased;
             canvas.MouseMoved += OnCanvasMouseMoved;
 
-            scrollbar.StepIncrement = 15; // TODO
-
             scrollbar.ValueChanged += OnScrollbarValueChanged;
             autoscrollEnabled = new TaskCompletionSource<bool>();
             HandleAutoscrollAsync();
             canvas.CanGetFocus = true;
             AppendRow(new MonospaceTextRow(""));
+            scrollbar.StepIncrement = MonospaceTextRow.GetLineSizeFromLayoutParams(layoutParameters).Height;
         }
 
         public void AppendRow(IRow row)

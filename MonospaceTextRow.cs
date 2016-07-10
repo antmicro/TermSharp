@@ -241,6 +241,13 @@ namespace Terminal
             lengthInTextElements = Math.Max(x + 1, lengthInTextElements);
         }
 
+        public static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
+        {
+            var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
+            textLayout.Text = "a\na";
+            return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
+        }
+
         public string Content
         {
             get
@@ -262,13 +269,6 @@ namespace Terminal
             {
                 dictionary = new Dictionary<int, Color>();
             }
-        }
-
-        private static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
-        {
-            var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
-            textLayout.Text = "a\na";
-            return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
         }
 
         private static IEnumerable<Tuple<int, int, Color>> GetColorRanges(Dictionary<int, Color> entries)

@@ -89,7 +89,10 @@ namespace Terminal
                     continue;
                 }
                 blinkState = !blinkState;
-                canvas.QueueDraw(); // TODO: only if cursor is visible
+                if(Enabled)
+                {
+                    canvas.QueueDraw();
+                }
             }
         }
 
