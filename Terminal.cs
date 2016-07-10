@@ -23,7 +23,6 @@ namespace Terminal
             layoutParameters = new LayoutParameters(Font, Colors.White, Colors.LightSlateGray);
             defaultBackground = Colors.Black;
 
-            Margins = new Rectangle();
             BackgroundColor = Colors.Black;
             PrepareLayoutParameters();
             canvas = new TerminalCanvas(this);
@@ -139,8 +138,6 @@ namespace Terminal
             }
         }
 
-        public Rectangle Margins { get; set; } // TODO
-
         public new Cursor Cursor
         {
             get
@@ -183,6 +180,18 @@ namespace Terminal
             set
             {
                 layoutParameters.SelectionColor = value;
+            }
+        }
+
+        public WidgetSpacing InnerMargin
+        {
+            get
+            {
+                return canvas.Margin;
+            }
+            set
+            {
+                canvas.Margin = value;
             }
         }
 
