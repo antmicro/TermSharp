@@ -22,76 +22,76 @@ namespace Terminal
             cursor = new Cursor(this);
         }
 
-        public void Feed(char c)
+        public void Feed(string textElement)
         {
             if(ignoreNextChar)
             {
                 ignoreNextChar = false;
                 return;
             }
-            if(inAnsiCode)
+            if(textElement.Length == 1)
             {
-                HandleAnsiCode(c);
-            }
-            else if(ControlByte.Backspace == (ControlByte)c)
-            {
-                cursor.Position = cursor.Position.ShiftedByX(-1);
-            }
-            else if(ControlByte.Escape == (ControlByte)c)
-            {
-                inAnsiCode = true;
-            }
-            else if(ControlByte.LineFeed == (ControlByte)c)
-            {
-                if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
+                var c = textElement[0];
+                if(inAnsiCode)
                 {
-                    terminal.AppendRow(new MonospaceTextRow(string.Empty));
+                    HandleAnsiCode(c);
                 }
-                var newPosition = cursor.Position.WithX(1);
-                newPosition = newPosition.ShiftedByY(1);
-                cursor.Position = newPosition;
-            }
-            else if(ControlByte.CarriageReturn == (ControlByte)c)
-            {
-                cursor.Position = cursor.Position.WithX(1);
-            }
-            else if(ControlByte.Bell == (ControlByte)c)
-            {
-                var bellReceived = BellReceived;
-                if(bellReceived != null)
+                else if(ControlByte.Backspace == (ControlByte)c)
                 {
-                    bellReceived();
+                    cursor.Position = cursor.Position.ShiftedByX(-1);
                 }
-            }
-            else if(ControlByte.HorizontalTab == (ControlByte)c)
-            {
-                HandleRegularCharacter(' ');
+                else if(ControlByte.Escape == (ControlByte)c)
+                {
+                    inAnsiCode = true;
+                }
+                else if(ControlByte.LineFeed == (ControlByte)c)
+                {
+                    if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
+                    {
+                        terminal.AppendRow(new MonospaceTextRow(string.Empty));
+                    }
+                    var newPosition = cursor.Position.WithX(1);
+                    newPosition = newPosition.ShiftedByY(1);
+                    cursor.Position = newPosition;
+                }
+                else if(ControlByte.CarriageReturn == (ControlByte)c)
+                {
+                    cursor.Position = cursor.Position.WithX(1);
+                }
+                else if(ControlByte.Bell == (ControlByte)c)
+                {
+                    var bellReceived = BellReceived;
+                    if(bellReceived != null)
+                    {
+                        bellReceived();
+                    }
+                }
+                else if(ControlByte.HorizontalTab == (ControlByte)c)
+                {
+                    HandleRegularCharacter(" ");
+                }
+                else
+                {
+                    if(char.IsControl(c))
+                    {
+                        if(c < 32)
+                        {
+                            Feed("^");
+                            Feed(((char)(c + 64)).ToString());
+                        }
+                        else
+                        {
+                            throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
+                        }
+                    }
+                    HandleRegularCharacter(textElement);
+                }
             }
             else
             {
-                if(char.IsControl(c))
-                {
-                    if(c < 32)
-                    {
-                        Feed("^");
-                        Feed((char)(c + 64));
-                    }
-                    else
-                    {
-                        throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
-                    }
-                }
-                HandleRegularCharacter(c);
+                HandleRegularCharacter(textElement);
             }
             terminal.Redraw();
-        }
-
-        public void Feed(string str)
-        {
-            foreach(var b in str)
-            {
-                Feed(b);
-            }
         }
 
         public Color? CurrentForeground { get; set; }
@@ -100,19 +100,19 @@ namespace Terminal
 
         public event Action BellReceived;
 
-        private void InsertCharacterAt(IntegerPosition where, char what)
+        private void InsertCharacterAt(IntegerPosition where, string what)
         {
             var textRow = terminal.GetScreenRow(where.Y - 1) as MonospaceTextRow;
             if(textRow == null)
             {
                 throw new InvalidOperationException(); // TODO
             }
-            textRow.InsertCharacterAt(where.X - 1, what, CurrentForeground, CurrentBackground);
+            textRow.InsertCharacterAt(where.X - 1, what.ToString(), CurrentForeground, CurrentBackground);
         }
 
-        private void HandleRegularCharacter(char c)
+        private void HandleRegularCharacter(string textElement)
         {
-            InsertCharacterAt(cursor.Position, c);
+            InsertCharacterAt(cursor.Position, textElement);
             cursor.Position = cursor.Position.ShiftedByX(1);
             terminal.Cursor.StayOnForNBlinks(1); // TODO: value
             terminal.Redraw();

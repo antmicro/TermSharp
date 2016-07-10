@@ -6,6 +6,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Xwt;
@@ -24,6 +25,7 @@ namespace Terminal
             }
 #endif
             this.content = content;
+            lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
         public double PrepareForDrawing(ILayoutParameters parameters)
@@ -33,29 +35,30 @@ namespace Terminal
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
             MaxOffset = (int)(lineSize.Width / charWidth);
-            return lineSize.Height * Math.Ceiling((content.Length == 0 ? 1 : content.Length) * charWidth / lineSize.Width);
+            return lineSize.Height * Math.Ceiling((lengthInTextElements == 0 ? 1 : lengthInTextElements) * charWidth / lineSize.Width);
         }
 
         public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection)
         {
             ctx.SetColor(defaultForeground);
-            textLayout.Text = content;
             var newLinesAt = new List<int> { 0 };
             var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
-            if(textLayout.Text.Length > 1)
+
+            var result = new StringBuilder();
+            var enumerator = StringInfo.GetTextElementEnumerator(content);
+            var textElementsThisLine = 0;
+            while(enumerator.MoveNext())
             {
-                var result = new StringBuilder();
-                var counter = 0;
-                result.Append(textLayout.Text.Substring(result.Length, Math.Min(charsOnLine, textLayout.Text.Length - result.Length)));
-                while((result.Length - counter) < textLayout.Text.Length)
+                textElementsThisLine++;
+                result.Append(enumerator.GetTextElement());
+                if(textElementsThisLine == charsOnLine)
                 {
                     result.Append('\n');
-                    newLinesAt.Add(result.Length);
-                    counter++;
-                    result.Append(textLayout.Text.Substring(result.Length - counter, Math.Min(charsOnLine, textLayout.Text.Length - (result.Length - counter))));
+                    newLinesAt.Add(enumerator.ElementIndex + newLinesAt.Count + 1);
+                    textElementsThisLine = 0;
                 }
-                textLayout.Text = result.ToString();
             }
+            textLayout.Text = result.ToString();
 
             var foregroundColors = specialForegrounds != null ? specialForegrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
             var backgroundColors = specialBackgrounds != null ? specialBackgrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
@@ -82,15 +85,16 @@ namespace Terminal
                     Utilities.Swap(ref startIndex, ref endIndex);
                 }
 
-                startIndex = Math.Max(0, Math.Min(textWithNewLines.Length, startIndex));
-                endIndex = Math.Max(0, Math.Min(textWithNewLines.Length, endIndex));
+                var textWithNewLinesStringInfo = new StringInfo(textWithNewLines);
+                startIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, startIndex));
+                endIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, endIndex));
 
-                for(var i = startIndex; i < endIndex; i++)
+                for(var i = startIndex; i <= endIndex; i++)
                 {
                     foregroundColors[i] = (specialForegrounds != null && specialForegrounds.ContainsKey(i)) ? specialForegrounds[i].WithIncreasedLight(0.2) : Colors.Black;
                     backgroundColors[i] = Colors.LightSlateGray;
                 }
-                selectedContent = textWithNewLines.Substring(startIndex, endIndex - startIndex);
+                selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex);
             }
             else
             {
@@ -134,13 +138,24 @@ namespace Terminal
             }
         }
 
-        public void Erase(int from, int to, Color? background)
+        public void Erase(int from, int to, Color? background = null)
         {
-            var builder = new StringBuilder(content);
+            var builder = new StringBuilder();
             to = Math.Min(to, content.Length - 1);
+
+            var stringInfo = new StringInfo(content);
+            builder.Append(stringInfo.SubstringByTextElements(0, from));
+            if(to > from)
+            {
+                builder.Append(' ', to - from);
+            }
+            if(to < stringInfo.LengthInTextElements)
+            {
+                builder.Append(stringInfo.SubstringByTextElements(to));
+            }
+
             for(var i = from; i <= to; i++)
             {
-                builder[i] = ' ';
                 if(background.HasValue)
                 {
                     CheckDictionary(ref specialBackgrounds);
@@ -158,12 +173,19 @@ namespace Terminal
                     specialForegrounds.Remove(i);
                 }
             }
-            // TODO: maybe trim trails
             content = builder.ToString();
+            lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
-        public void InsertCharacterAt(int x, char what, Color? foreground, Color? background)
+        public void InsertCharacterAt(int x, string what, Color? foreground = null, Color? background = null)
         {
+            #if DEBUG
+            if(new StringInfo(what).LengthInTextElements != 1)
+            {
+                throw new ArgumentException("Character to add have to has length = 1.");
+            }
+            #endif
+
             if(foreground.HasValue)
             {
                 CheckDictionary(ref specialForegrounds);
@@ -190,13 +212,32 @@ namespace Terminal
                 }
             }
 
-            var builder = new StringBuilder(content, x);
-            for(var i = builder.Length; i <= x; i++)
+            var stringInfo = new StringInfo(content);
+            StringBuilder builder;
+            if(x > 0)
             {
-                builder.Append(' ');
+                if(lengthInTextElements < x)
+                {
+                    builder = new StringBuilder(content);
+                    builder.Append(' ', x - lengthInTextElements);
+                }
+                else
+                {
+                    builder = new StringBuilder(stringInfo.SubstringByTextElements(0, x));
+                }
             }
-            builder[x] = what;
+            else
+            {
+                builder = new StringBuilder();
+            }
+            builder.Append(what);
+            if(lengthInTextElements > x + 1)
+            {
+                builder.Append(stringInfo.SubstringByTextElements(x + 1));
+            }
+
             content = builder.ToString();
+            lengthInTextElements = Math.Max(x + 1, lengthInTextElements);
         }
 
         public string Content
@@ -208,6 +249,7 @@ namespace Terminal
             set
             {
                 content = value;
+                lengthInTextElements = new StringInfo(content).LengthInTextElements;
             }
         }
 
@@ -249,6 +291,7 @@ namespace Terminal
         private string selectedContent;
         private string content;
         private Color defaultForeground;
+        private int lengthInTextElements;
         private Dictionary<int, Color> specialForegrounds;
         private Dictionary<int, Color> specialBackgrounds;
 

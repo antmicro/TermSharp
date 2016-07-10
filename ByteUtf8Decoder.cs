@@ -11,12 +11,12 @@ namespace Terminal
 {
     public sealed class ByteUtf8Decoder
     {
-        public ByteUtf8Decoder(Action<char> charDecodedCallback)
+        public ByteUtf8Decoder(Action<string> charDecodedCallback)
         {
             this.charDecodedCallback = charDecodedCallback;
             utfBytes = new byte[4];
             utf8Decoder = Encoding.UTF8.GetDecoder();
-            result = new char[1];
+            result = new char[2];
         }
 
         public void Feed(byte b)
@@ -28,8 +28,9 @@ namespace Terminal
             utfBytes[currentIndex++] = b;
             if(currentIndex == currentCount)
             {
-                utf8Decoder.GetChars(utfBytes, 0, currentCount, result, 0);
-                charDecodedCallback(result[0]);
+                var utf16CharCount = utf8Decoder.GetChars(utfBytes, 0, currentCount, result, 0, true);
+                var resultAsString = new string(result, 0, utf16CharCount);
+                charDecodedCallback(resultAsString);
                 currentCount = 0;
                 currentIndex = 0;
             }
@@ -55,7 +56,7 @@ namespace Terminal
         private int currentCount;
         private int currentIndex;
         private readonly byte[] utfBytes;
-        private readonly Action<char> charDecodedCallback;
+        private readonly Action<string> charDecodedCallback;
         private readonly char[] result;
         private readonly Decoder utf8Decoder;
     }
