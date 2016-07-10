@@ -12,12 +12,23 @@ namespace Terminal
     {
         public LayoutParameters(Font font, Color defaultForeground, Color selectionColor)
         {
-            Font = font;
+            this.font = font;
             this.defaultForeground = defaultForeground;
             this.selectionColor = selectionColor;
         }
 
-        public Font Font { get; set; }
+        public Font Font
+        {
+            get
+            {
+                return font;
+            }
+            set
+            {
+                font = value;
+                UpdateGeneration();
+            }
+        }
 
         public double Width
         {
@@ -83,6 +94,7 @@ namespace Terminal
             generation++;
         }
 
+        private Font font;
         private int generation;
         private Color defaultForeground;
         private Color selectionColor;
