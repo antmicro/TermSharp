@@ -54,6 +54,8 @@
     <Compile Include="Vt100DecoderCommands.cs" />
     <Compile Include="ByteUtf8Decoder.cs" />
     <Compile Include="Vt100Encoder.cs" />
+    <Compile Include="IVt100DecoderLogger.cs" />
+    <Compile Include="ConsoleVt100DecoderLogger.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

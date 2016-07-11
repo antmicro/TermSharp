@@ -113,7 +113,7 @@ namespace Terminal
                 }
                 else
                 {
-                    Console.WriteLine("Unimplemented SGR {0}.", value);
+                    logger.Log(string.Format("Unimplemented SGR code {0}.", value));
                 }
             }
             if(foregroundColorIndex != -1)
@@ -152,7 +152,8 @@ namespace Terminal
                 clearEnd = terminal.Cursor.MaximalPosition;
                 break;
             default:
-                throw new NotImplementedException("Unimplemented erase display mode.");
+                logger.Log("Unimplemented erase display mode.");
+                return;
             }
             terminal.EraseScreen(clearBegin, clearEnd, CurrentBackground);
         }
@@ -178,7 +179,8 @@ namespace Terminal
                 textRow.Erase(0, int.MaxValue, CurrentBackground);
                 break;
             default:
-                throw new NotImplementedException("Uimplemented erase line mode.");
+                logger.Log("Uimplemented erase line mode.");
+                break;
             }
         }
 
@@ -224,7 +226,7 @@ namespace Terminal
                 terminal.Cursor.Enabled = true;
                 return;
             }
-            Console.WriteLine("Unimplemented mode set mode with {0}.", ParamsToString()); // TODO
+            logger.Log(string.Format("Unimplemented mode set with params {0}.", ParamsToString()));
         }
 
         private void ResetMode()
@@ -234,7 +236,7 @@ namespace Terminal
                 terminal.Cursor.Enabled = false;
                 return;
             }
-            Console.WriteLine("Unimplemented reset mode with {0}.", ParamsToString()); // TODO
+            logger.Log(string.Format("Unimplemented mode reset with params {0}.", ParamsToString()));
         }
 
         private int GetParamOrDefault(int index, int defaultValue)
@@ -280,7 +282,8 @@ namespace Terminal
             case 7:
                 return dark ? Colors.LightGray : Colors.White;
             }
-            throw new InvalidOperationException("Unexpected palette color number.");
+            logger.Log("Unexpected palette color number.");
+            return Colors.Black;
         }
 
         private Color GetExtendedColor(ref int baseParameterIndex)
@@ -308,7 +311,8 @@ namespace Terminal
                     return new Color(index / 24.0, index / 24.0, index / 24.0);
                 }
             default:
-                throw new NotImplementedException("Unimplemented extended color mode.");
+                logger.Log("Unimplemented extended color mode.");
+                return Colors.Black;
             }
         }
 

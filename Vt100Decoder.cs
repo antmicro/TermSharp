@@ -13,10 +13,11 @@ namespace Terminal
 {
     public sealed partial class Vt100Decoder
     {
-        public Vt100Decoder(Terminal terminal, Action<byte> responseCallback)
+        public Vt100Decoder(Terminal terminal, Action<byte> responseCallback, IVt100DecoderLogger logger)
         {
             this.terminal = terminal;
             this.responseCallback = responseCallback;
+            this.logger = logger;
             commands = new Dictionary<char, Action>();
             InitializeCommands();
             cursor = new Cursor(this);
@@ -82,10 +83,13 @@ namespace Terminal
                         }
                         else
                         {
-                            throw new NotImplementedException(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
+                            logger.Log(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
                         }
                     }
-                    HandleRegularCharacter(textElement);
+                    else
+                    {
+                        HandleRegularCharacter(textElement);
+                    }
                 }
             }
             else
@@ -136,7 +140,9 @@ namespace Terminal
             }
             if(ControlByte.Escape == (ControlByte)c)
             {
-                throw new NotImplementedException("Escape character within ANSI code.");
+                logger.Log("Escape character within ANSI code.");
+                inAnsiCode = false;
+                return;
             }
             if(char.IsLetter(c))
             {
@@ -153,7 +159,7 @@ namespace Terminal
                 }
                 else
                 {
-                    throw new NotImplementedException(string.Format("Unimplemented ANSI code {0}.", c));
+                    logger.Log(string.Format("Unimplemented ANSI code {0}.", c));
                 }
             }
             else
@@ -187,7 +193,8 @@ namespace Terminal
                 RestoreCursorPosition();
                 break;
             default:
-                throw new NotImplementedException(string.Format("Unimplemented non-CSI code '{0}'.", c));
+                logger.Log(string.Format("Unimplemented non-CSI code '{0}'.", c));
+                break;
             }
         }
 
@@ -215,6 +222,7 @@ namespace Terminal
         private readonly Terminal terminal;
         private readonly Cursor cursor;
         private readonly Action<byte> responseCallback;
+        private readonly IVt100DecoderLogger logger;
 
         private sealed class Cursor
         {
