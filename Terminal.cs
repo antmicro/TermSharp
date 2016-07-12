@@ -53,7 +53,7 @@ namespace Terminal
             rows.Add(row);
             row.PrepareForDrawing(layoutParameters);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
-            canvas.QueueDraw();
+            canvas.Redraw();
 
             scrollbar.Sensitive = GetMaximumHeight() > canvas.Bounds.Height;
 
@@ -69,12 +69,12 @@ namespace Terminal
             rowsGeneration++;
             rows.Clear();
             RebuildHeightMap(true);
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         public void Redraw()
         {
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         public ClipboardData CollectClipboardData()
@@ -99,7 +99,7 @@ namespace Terminal
                 var row = GetScreenRow(rowScreenPosition);
                 row.Erase(rowScreenPosition == from.Y ? from.X : 0, rowScreenPosition == to.Y ? to.X : row.MaxOffset, background);
             }
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         public void MoveScrollbarToEnd()
@@ -305,7 +305,7 @@ namespace Terminal
             // difference between old and new position of the first displayed row:
             var diff = GetPositionOfTheRow(firstDisplayedRowIndex) - oldPosition;
             SetScrollbarValue(oldScrollbarValue + diff);
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         private void SetAutoscrollValue(int value)
@@ -338,7 +338,7 @@ namespace Terminal
                 var scrollStart = currentScrollStart.Value;
                 canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
             }
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         private async void HandleAutoscrollAsync()
@@ -489,6 +489,15 @@ namespace Terminal
                 Cursor = CursorType.IBeam;
             }
 
+            public void Redraw()
+            {
+                if(drawn)
+                {
+                    QueueDraw();
+                    drawn = false;
+                }
+            }
+
             public int FirstRowToDisplay { get; set; }
 
             public double FirstRowHeight { get; set; }
@@ -576,8 +585,10 @@ namespace Terminal
                     i++;
                 }
                 ctx.Restore();
+                drawn = true;
             }
 
+            private bool drawn;
             private readonly Terminal parent;
         }
     }

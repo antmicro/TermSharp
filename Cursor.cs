@@ -24,7 +24,7 @@ namespace Terminal
         {
             blinkWaitRounds = n;
             blinkState = true;
-            canvas.QueueDraw();
+            canvas.Redraw();
         }
 
         public IntegerPosition Position
@@ -88,10 +88,10 @@ namespace Terminal
                     blinkWaitRounds--;
                     continue;
                 }
-                blinkState = !blinkState;
                 if(Enabled)
                 {
-                    canvas.QueueDraw();
+                    blinkState = !blinkState;
+                    canvas.Redraw();
                 }
             }
         }
