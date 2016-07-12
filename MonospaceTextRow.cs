@@ -142,17 +142,20 @@ namespace Terminal
         public void Erase(int from, int to, Color? background = null)
         {
             var builder = new StringBuilder();
-            to = Math.Min(to, content.Length - 1);
+            to = Math.Max(0, Math.Min(to, content.Length - 1));
 
             var stringInfo = new StringInfo(content);
-            builder.Append(stringInfo.SubstringByTextElements(0, from));
+            if(from > 0)
+            {
+                builder.Append(stringInfo.SubstringByTextElements(0, from));
+            }
             if(to > from)
             {
                 builder.Append(' ', to - from);
             }
-            if(to < stringInfo.LengthInTextElements)
+            if(to + 1 < stringInfo.LengthInTextElements)
             {
-                builder.Append(stringInfo.SubstringByTextElements(to));
+                builder.Append(stringInfo.SubstringByTextElements(to + 1));
             }
 
             for(var i = from; i <= to; i++)
