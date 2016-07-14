@@ -95,7 +95,7 @@ namespace Terminal
                     foregroundColors[i] = (specialForegrounds != null && specialForegrounds.ContainsKey(i)) ? specialForegrounds[i].WithIncreasedLight(0.2) : Colors.Black;
                     backgroundColors[i] = selectionColor;
                 }
-                selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex);
+                selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex + 1);
             }
             else
             {
