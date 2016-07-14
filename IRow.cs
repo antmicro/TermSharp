@@ -13,6 +13,7 @@ namespace Terminal
     {
         double PrepareForDrawing(ILayoutParameters parameters);
         void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection);
+        void ResetSelection();
         void DrawCursor(Context ctx, int offset, bool focused);
         void FillClipboardData(ClipboardData data);
         void Erase(int from, int to, Color? background);

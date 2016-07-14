@@ -115,6 +115,11 @@ namespace Terminal
             textLayout.ClearAttributes();
         }
 
+        public void ResetSelection()
+        {
+            selectedContent = null;
+        }
+
         public void DrawCursor(Context ctx, int offset, bool focused)
         {
             var column = offset % MaxOffset;

@@ -219,6 +219,10 @@ namespace Terminal
             var position = e.Position;
             position.Y += scrollbar.Value;
             currentScrollStart = position;
+            foreach(var row in rows)
+            {
+                row.ResetSelection();
+            }
         }
 
         private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
