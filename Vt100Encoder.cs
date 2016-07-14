@@ -30,6 +30,23 @@ namespace Terminal
                 { Key.End, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'4', (byte)'~' } },
                 { Key.PageUp, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'5', (byte)'~' } },
                 { Key.PageDown, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'6', (byte)'~' } },
+
+                { Key.NumPad0, new [] { (byte)'0' } },
+                { Key.NumPad1, new [] { (byte)'1' } },
+                { Key.NumPad2, new [] { (byte)'2' } },
+                { Key.NumPad3, new [] { (byte)'3' } },
+                { Key.NumPad4, new [] { (byte)'4' } },
+                { Key.NumPad5, new [] { (byte)'5' } },
+                { Key.NumPad6, new [] { (byte)'6' } },
+                { Key.NumPad7, new [] { (byte)'7' } },
+                { Key.NumPad8, new [] { (byte)'8' } },
+                { Key.NumPad9, new [] { (byte)'9' } },
+                { Key.NumPadAdd, new [] { (byte)'+' } },
+                { Key.NumPadSubtract, new [] { (byte)'-' } },
+                { Key.NumPadMultiply, new [] { (byte)'*' } },
+                { Key.NumPadDivide, new [] { (byte)'/' } },
+                { Key.NumPadDecimal, new [] { (byte)'.' } },
+                { Key.NumPadEnter, new [] { (byte)ControlByte.CarriageReturn } },
             };
         }
 
