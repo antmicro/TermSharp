@@ -48,7 +48,6 @@ namespace Terminal
 
         public void AppendRow(IRow row)
         {
-            rowsGeneration++;
             var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
             rows.Add(row);
             row.PrepareForDrawing(layoutParameters);
@@ -66,7 +65,6 @@ namespace Terminal
 
         public new void Clear()
         {
-            rowsGeneration++;
             rows.Clear();
             RebuildHeightMap(true);
             canvas.Redraw();
@@ -277,28 +275,35 @@ namespace Terminal
             SetScrollbarValue(scrollbar.Value + scrollbar.StepIncrement * modifier);
         }
 
+#if DEBUG
         private async void OnCanvasBoundsChanged(object sender, EventArgs e)
+#else
+        private void OnCanvasBoundsChanged(object sender, EventArgs e)
+#endif
         {
             canvas.SelectedArea = default(Rectangle);
 
-            var ourRowsGeneration = rowsGeneration;
             double oldPosition;
             var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out oldPosition);
             var oldScrollbarValue = scrollbar.Value;
 
             layoutParameters.Width = canvas.Size.Width;
 
+#if DEBUG
             if(!RebuildHeightMap(false))
             {
                 var boundChangedGeneration = ++canvasBoundChangedGeneration;
 
                 await Task.Delay(TimeSpan.FromMilliseconds(200));
-                if(ourRowsGeneration != rowsGeneration || boundChangedGeneration != canvasBoundChangedGeneration)
+                if(boundChangedGeneration != canvasBoundChangedGeneration)
                 {
                     return;
                 }
                 RebuildHeightMap(true);
             }
+#else
+            RebuildHeightMap(true);
+#endif
 
             scrollbar.UpperValue = GetMaximumHeight();
 
@@ -464,8 +469,9 @@ namespace Terminal
 
         private double[] heightMap;
         private double[] unfinishedHeightMap;
+#if DEBUG
         private int canvasBoundChangedGeneration;
-        private int rowsGeneration;
+#endif
         private Point? currentScrollStart;
         private Point lastMousePosition;
         private int autoscrollStep;
