@@ -583,7 +583,7 @@ namespace Terminal
                     }
 
                     ctx.Save();
-                    parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection);
+                    parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection, parent.SelectionMode);
                     if(parent.Cursor.Enabled && i == cursorRow && (parent.Cursor.BlinkState || !HasFocus))
                     {
                         parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X, HasFocus);

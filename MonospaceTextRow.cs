@@ -39,7 +39,7 @@ namespace Terminal
             return lineSize.Height * Math.Ceiling((lengthInTextElements == 0 ? 1 : lengthInTextElements) * charWidth / lineSize.Width);
         }
 
-        public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection)
+        public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
         {
             ctx.SetColor(defaultForeground);
             var newLinesAt = new List<int> { 0 };
@@ -72,30 +72,44 @@ namespace Terminal
                 var startColumn = (int)Math.Round(selectedArea.X / charWidth);
                 var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
 
-                if(selectionDirection == SelectionDirection.NW)
+                if(selectionMode == SelectionMode.Block)
                 {
-                    Utilities.Swap(ref startColumn, ref endColumn);
-                    Utilities.Swap(ref startRow, ref endRow);
+                    for(var i = startRow; i <= endRow; i++)
+                    {
+                        for(var j = startColumn; j <= endColumn; j++)
+                        {
+                            foregroundColors[(charsOnLine + 1) * i + j] = GetSelectionForegroundColor(i);
+                            backgroundColors[(charsOnLine + 1) * i + j] = selectionColor;
+                        }
+                    }
                 }
-
-                var startIndex = startColumn + newLinesAt[startRow];
-                var endIndex = endColumn + newLinesAt[endRow];
-
-                if(endIndex < startIndex)
+                else
                 {
-                    Utilities.Swap(ref startIndex, ref endIndex);
-                }
+                    if(selectionDirection == SelectionDirection.NW)
+                    {
+                        Utilities.Swap(ref startColumn, ref endColumn);
+                        Utilities.Swap(ref startRow, ref endRow);
+                    }
 
-                var textWithNewLinesStringInfo = new StringInfo(textWithNewLines);
-                startIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, startIndex));
-                endIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, endIndex));
+                    var startIndex = startColumn + newLinesAt[startRow];
+                    var endIndex = endColumn + newLinesAt[endRow];
 
-                for(var i = startIndex; i <= endIndex; i++)
-                {
-                    foregroundColors[i] = (specialForegrounds != null && specialForegrounds.ContainsKey(i)) ? specialForegrounds[i].WithIncreasedLight(0.2) : Colors.Black;
-                    backgroundColors[i] = selectionColor;
+                    if(endIndex < startIndex)
+                    {
+                        Utilities.Swap(ref startIndex, ref endIndex);
+                    }
+
+                    var textWithNewLinesStringInfo = new StringInfo(textWithNewLines);
+                    startIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, startIndex));
+                    endIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, endIndex));
+
+                    for(var i = startIndex; i <= endIndex; i++)
+                    {
+                        foregroundColors[i] = GetSelectionForegroundColor(i);
+                        backgroundColors[i] = selectionColor;
+                    }
+                    selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex + 1);
                 }
-                selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex + 1);
             }
             else
             {
@@ -292,6 +306,11 @@ namespace Terminal
                     yield return Tuple.Create(begins[i], ends[i] - begins[i] + 1, color);
                 }
             }
+        }
+
+        private Color GetSelectionForegroundColor(int index)
+        {
+            return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : Colors.Black;
         }
 
         private double charWidth;
