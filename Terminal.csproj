@@ -36,26 +36,31 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IRow.cs" />
-    <Compile Include="MonospaceTextRow.cs" />
     <Compile Include="LayoutParameters.cs" />
     <Compile Include="ILayoutParameters.cs" />
-    <Compile Include="SimpleCache.cs" />
-    <Compile Include="IGenerationAware.cs" />
     <Compile Include="Terminal.cs" />
     <Compile Include="SelectionMode.cs" />
-    <Compile Include="ClipboardData.cs" />
-    <Compile Include="Utilities.cs" />
     <Compile Include="SelectionDirection.cs" />
     <Compile Include="Cursor.cs" />
-    <Compile Include="IntegerPosition.cs" />
-    <Compile Include="Vt100Decoder.cs" />
-    <Compile Include="ControlByte.cs" />
-    <Compile Include="Vt100DecoderCommands.cs" />
-    <Compile Include="ByteUtf8Decoder.cs" />
-    <Compile Include="Vt100Encoder.cs" />
-    <Compile Include="IVt100DecoderLogger.cs" />
-    <Compile Include="ConsoleVt100DecoderLogger.cs" />
+    <Compile Include="Rows\MonospaceTextRow.cs" />
+    <Compile Include="Vt100\IDecoderLogger.cs" />
+    <Compile Include="Vt100\ConsoleDecoderLogger.cs" />
+    <Compile Include="Vt100\Decoder.cs" />
+    <Compile Include="Vt100\Encoder.cs" />
+    <Compile Include="Vt100\DecoderCommands.cs" />
+    <Compile Include="Vt100\ControlByte.cs" />
+    <Compile Include="Misc\SimpleCache.cs" />
+    <Compile Include="Misc\Utilities.cs" />
+    <Compile Include="Rows\IRow.cs" />
+    <Compile Include="Misc\IntegerPosition.cs" />
+    <Compile Include="Misc\ClipboardData.cs" />
+    <Compile Include="Vt100\ByteUtf8Decoder.cs" />
+    <Compile Include="Misc\IGenerationAware.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Rows\" />
+    <Folder Include="Vt100\" />
+    <Folder Include="Misc\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

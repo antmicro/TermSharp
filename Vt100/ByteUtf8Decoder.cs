@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Terminal
+namespace Terminal.Vt100
 {
     public sealed class ByteUtf8Decoder
     {
@@ -58,7 +58,7 @@ namespace Terminal
         private readonly byte[] utfBytes;
         private readonly Action<string> charDecodedCallback;
         private readonly char[] result;
-        private readonly Decoder utf8Decoder;
+        private readonly System.Text.Decoder utf8Decoder;
     }
 }
 

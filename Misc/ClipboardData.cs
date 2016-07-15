@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Terminal
+namespace Terminal.Misc
 {
     public sealed class ClipboardData
     {

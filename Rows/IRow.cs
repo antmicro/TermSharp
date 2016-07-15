@@ -4,10 +4,11 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
+using Terminal.Misc;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace Terminal.Rows
 {
     public interface IRow
     {

@@ -9,10 +9,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Terminal.Misc;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace Terminal.Rows
 {
     public class MonospaceTextRow : IRow
     {

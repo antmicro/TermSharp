@@ -4,7 +4,8 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
-namespace Terminal
+
+namespace Terminal.Vt100
 {
     public enum ControlByte : byte
     {

@@ -7,13 +7,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Terminal.Misc;
+using Terminal.Rows;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace Terminal.Vt100
 {
-    public sealed partial class Vt100Decoder
+    public sealed partial class Decoder
     {
-        public Vt100Decoder(Terminal terminal, Action<byte> responseCallback, IVt100DecoderLogger logger)
+        public Decoder(Terminal terminal, Action<byte> responseCallback, IDecoderLogger logger)
         {
             this.terminal = terminal;
             this.responseCallback = responseCallback;
@@ -222,11 +224,11 @@ namespace Terminal
         private readonly Terminal terminal;
         private readonly Cursor cursor;
         private readonly Action<byte> responseCallback;
-        private readonly IVt100DecoderLogger logger;
+        private readonly IDecoderLogger logger;
 
         private sealed class Cursor
         {
-            public Cursor(Vt100Decoder parent)
+            public Cursor(Decoder parent)
             {
                 this.parent = parent;
             }
@@ -256,7 +258,7 @@ namespace Terminal
                 }
             }
 
-            private readonly Vt100Decoder parent;
+            private readonly Decoder parent;
         }
     }
 }

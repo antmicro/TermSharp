@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Terminal.Misc;
+using Terminal.Rows;
 using Xwt;
 using Xwt.Drawing;
 

@@ -7,7 +7,7 @@ using System;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace Terminal.Misc
 {
     internal static class Utilities
     {

@@ -4,6 +4,7 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
+using Terminal.Misc;
 using Xwt.Drawing;
 
 namespace Terminal

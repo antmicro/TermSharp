@@ -5,6 +5,7 @@
 //
 using System;
 using System.Threading.Tasks;
+using Terminal.Misc;
 using Xwt;
 using Xwt.Drawing;
 

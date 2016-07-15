@@ -7,11 +7,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Terminal.Misc;
+using Terminal.Rows;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace Terminal.Vt100
 {
-    public partial class Vt100Decoder
+    public partial class Decoder
     {
         // all cursor limits are already handled in terminal
 

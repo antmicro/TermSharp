@@ -4,9 +4,10 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
-namespace Terminal
+
+namespace Terminal.Vt100
 {
-    public class ConsoleVt100DecoderLogger : IVt100DecoderLogger
+    public class ConsoleDecoderLogger : IDecoderLogger
     {
         public void Log(string message)
         {

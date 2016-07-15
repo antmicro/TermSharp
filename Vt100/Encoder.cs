@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using Xwt;
 
-namespace Terminal
+namespace Terminal.Vt100
 {
-    public sealed class Vt100Encoder
+    public sealed class Encoder
     {
-        public Vt100Encoder(Action<byte> dataCallback)
+        public Encoder(Action<byte> dataCallback)
         {
             this.dataCallback = dataCallback;
             keyHandlers = new Dictionary<Key, byte[]>
