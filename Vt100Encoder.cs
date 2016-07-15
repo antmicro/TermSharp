@@ -47,6 +47,17 @@ namespace Terminal
                 { Key.NumPadDivide, new [] { (byte)'/' } },
                 { Key.NumPadDecimal, new [] { (byte)'.' } },
                 { Key.NumPadEnter, new [] { (byte)ControlByte.CarriageReturn } },
+
+                { Key.F1, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'P' } },
+                { Key.F2, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'Q' } },
+                { Key.F3, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'R' } },
+                { Key.F4, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'S' } },
+                { Key.F5, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'5', (byte)'~' } },
+                { Key.F6, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'7', (byte)'~' } },
+                { Key.F7, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'8', (byte)'~' } },
+                { Key.F8, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'9', (byte)'~' } },
+                { Key.F9, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'2', (byte)'0', (byte)'~' } },
+                { Key.F10, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'2', (byte)'1', (byte)'~' } },
             };
         }
 
