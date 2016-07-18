@@ -18,7 +18,7 @@ namespace Terminal.Vt100
             {
                 { Key.Escape, new [] { (byte)ControlByte.Escape } },
                 { Key.Return, new [] { (byte)ControlByte.CarriageReturn } },
-                { Key.BackSpace, new [] { (byte)ControlByte.Backspace } },
+                { Key.BackSpace, new [] { (byte)ControlByte.Delete } },
                 { Key.Tab, new [] { (byte)ControlByte.HorizontalTab } },
                 { Key.Up, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'A' } },
                 { Key.Down, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'B' } },

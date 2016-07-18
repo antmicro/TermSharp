@@ -15,7 +15,8 @@ namespace Terminal.Vt100
         HorizontalTab = 0x09,
         CarriageReturn = 0xD,
         Escape = 0x1B,
-        Csi = (byte)'['
+        Csi = (byte)'[',
+        Delete = 0x7F
     }
 }
 
