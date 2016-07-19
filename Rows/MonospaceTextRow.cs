@@ -165,7 +165,7 @@ namespace Terminal.Rows
             to = Math.Max(0, Math.Min(to, content.Length - 1));
 
             var stringInfo = new StringInfo(content);
-            if(from > 0)
+            if(from > 0 && stringInfo.LengthInTextElements > 0)
             {
                 builder.Append(stringInfo.SubstringByTextElements(0, from));
             }
