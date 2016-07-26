@@ -54,22 +54,21 @@ namespace Terminal
             rows.Add(row);
             row.PrepareForDrawing(layoutParameters);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
-            canvas.Redraw();
-
-            scrollbar.Sensitive = GetMaximumHeight() > canvas.Bounds.Height;
-
-            scrollbar.UpperValue = GetMaximumHeight();
-            if(weWereAtEnd)
-            {
-                MoveScrollbarToEnd();
-            }
+            RefreshInner(weWereAtEnd);
         }
 
         public new void Clear()
         {
             rows.Clear();
             RebuildHeightMap(true);
-            canvas.Redraw();
+            RefreshInner(true); // it does not matter whether we actually were at the end
+        }
+
+        public void Refresh()
+        {
+            var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
+            RebuildHeightMap(true);
+            RefreshInner(weWereAtEnd);
         }
 
         public void Redraw()
@@ -92,12 +91,20 @@ namespace Terminal
             return rows[GetScreenRowIndex(screenPosition)];
         }
 
+        public IRow GetFirstScreenRow(out double hiddenHeight)
+        {
+            double rowStart;
+            var result = rows[FindRowIndexAtPosition(GetMaximumScrollbarValue(), out rowStart)];
+            hiddenHeight = GetMaximumScrollbarValue() - rowStart;
+            return result;
+        }
+
         public void EraseScreen(IntegerPosition from, IntegerPosition to, Color? background)
         {
             for(var rowScreenPosition = from.Y; rowScreenPosition <= to.Y; rowScreenPosition++)
             {
                 var row = GetScreenRow(rowScreenPosition);
-                row.Erase(rowScreenPosition == from.Y ? from.X : 0, rowScreenPosition == to.Y ? to.X : row.MaxOffset, background);
+                row.Erase(rowScreenPosition == from.Y ? from.X : 0, rowScreenPosition == to.Y ? to.X : row.CurrentMaximalCursorPosition, background);
             }
             canvas.Redraw();
         }
@@ -122,6 +129,14 @@ namespace Terminal
                 double unused;
                 var firstRowNo = FindRowIndexAtPosition(GetMaximumScrollbarValue(), out unused);
                 return RowCount - firstRowNo;
+            }
+        }
+
+        public double ScreenSize
+        {
+            get
+            {
+                return canvas.Bounds.Height;
             }
         }
 
@@ -317,6 +332,18 @@ namespace Terminal
             var diff = GetPositionOfTheRow(firstDisplayedRowIndex) - oldPosition;
             SetScrollbarValue(oldScrollbarValue + diff);
             canvas.Redraw();
+        }
+
+        private void RefreshInner(bool weWereAtEnd)
+        {
+            canvas.Redraw();
+            scrollbar.Sensitive = GetMaximumHeight() > canvas.Bounds.Height;
+
+            scrollbar.UpperValue = GetMaximumHeight();
+            if(weWereAtEnd)
+            {
+                MoveScrollbarToEnd();
+            }
         }
 
         private void SetAutoscrollValue(int value)

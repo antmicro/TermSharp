@@ -48,11 +48,6 @@ namespace Terminal
                 {
                     value = value.WithX(0);
                 }
-                var row = terminal.GetScreenRow(value.Y);
-                if(value.X > row.MaxOffset)
-                {
-                    value = value.WithX(row.MaxOffset);
-                }
                 position = value;
             }
         }
@@ -62,7 +57,7 @@ namespace Terminal
             get
             {
                 var maxY = terminal.ScreenRowCount - 1;
-                var maxX = terminal.GetScreenRow(maxY).MaxOffset;
+                var maxX = terminal.GetScreenRow(maxY).CurrentMaximalCursorPosition;
                 return new IntegerPosition(maxX, maxY);
             }
         }

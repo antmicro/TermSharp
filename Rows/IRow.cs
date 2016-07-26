@@ -18,7 +18,7 @@ namespace Terminal.Rows
         void DrawCursor(Context ctx, int offset, bool focused);
         void FillClipboardData(ClipboardData data);
         void Erase(int from, int to, Color? background);
-        int MaxOffset { get; }
+        int CurrentMaximalCursorPosition { get; }
     }
 }
 

@@ -32,6 +32,11 @@ namespace Terminal.Vt100
         private void CursorLeft()
         {
             var delta = GetParamOrDefault(0, 1);
+            if(cursorAtTheEndOfLine)
+            {
+                // we ignore one cursor left here
+                delta--;
+            }
             cursor.Position = cursor.Position.ShiftedByX(-delta);
         }
 
@@ -163,22 +168,21 @@ namespace Terminal.Vt100
         private void EraseInLine()
         {
             var type = GetParamOrDefault(0, 0);
-            var currentRow = terminal.GetScreenRow(terminal.Cursor.Position.Y);
-            var textRow = currentRow as MonospaceTextRow;
-            if(textRow == null)
-            {
-                throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
-            }
+            var currentRow = (MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y);
+
+            var screenRowBegin = (terminal.Cursor.Position.X / (currentRow.MaximalColumn + 1)) * (currentRow.MaximalColumn + 1);
+            var screenRowEnd = screenRowBegin + currentRow.MaximalColumn + 1;
+
             switch(type)
             {
             case 0:
-                textRow.Erase(terminal.Cursor.Position.X, int.MaxValue, CurrentBackground);
+                currentRow.Erase(terminal.Cursor.Position.X, screenRowEnd, CurrentBackground);
                 break;
             case 1:
-                textRow.Erase(0, terminal.Cursor.Position.X, CurrentBackground);
+                currentRow.Erase(screenRowBegin, terminal.Cursor.Position.X, CurrentBackground);
                 break;
             case 2:
-                textRow.Erase(0, int.MaxValue, CurrentBackground);
+                currentRow.Erase(screenRowBegin, screenRowEnd, CurrentBackground);
                 break;
             default:
                 logger.Log("Uimplemented erase line mode.");

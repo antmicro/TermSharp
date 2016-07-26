@@ -36,8 +36,9 @@ namespace Terminal.Rows
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
-            MaxOffset = (int)(lineSize.Width / charWidth);
-            return lineSize.Height * Math.Ceiling((lengthInTextElements == 0 ? 1 : lengthInTextElements) * charWidth / lineSize.Width);
+            MaximalColumn = ((int)(lineSize.Width / charWidth)) - 1;
+            lineCount = (int)Math.Ceiling((lengthInTextElements == 0 ? 1 : lengthInTextElements) * charWidth / lineSize.Width);
+            return lineSize.Height * lineCount;
         }
 
         public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
@@ -64,7 +65,7 @@ namespace Terminal.Rows
 
             var foregroundColors = specialForegrounds != null ? specialForegrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
             var backgroundColors = specialBackgrounds != null ? specialBackgrounds.ToDictionary(x => x.Key + x.Key / charsOnLine, x => x.Value) : new Dictionary<int, Color>();
-            if(selectedArea != default(Rectangle))
+            if(selectedArea != default(Rectangle) && lengthInTextElements > 0)
             {
                 var textWithNewLines = textLayout.Text;
 
@@ -137,8 +138,8 @@ namespace Terminal.Rows
 
         public void DrawCursor(Context ctx, int offset, bool focused)
         {
-            var column = offset % MaxOffset;
-            var row = offset / MaxOffset;
+            var column = offset % (MaximalColumn + 1);
+            var row = offset / (MaximalColumn + 1);
             ctx.SetColor(defaultForeground);
             ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
             if(focused)
@@ -162,10 +163,10 @@ namespace Terminal.Rows
         public void Erase(int from, int to, Color? background = null)
         {
             var builder = new StringBuilder();
-            to = Math.Max(0, Math.Min(to, content.Length - 1));
-
             var stringInfo = new StringInfo(content);
-            if(from > 0 && stringInfo.LengthInTextElements > 0)
+            from = Math.Max(0, Math.Min(from, stringInfo.LengthInTextElements - 1));
+
+            if(from > 0)
             {
                 builder.Append(stringInfo.SubstringByTextElements(0, from));
             }
@@ -173,9 +174,9 @@ namespace Terminal.Rows
             {
                 builder.Append(' ', to - from);
             }
-            if(to + 1 < stringInfo.LengthInTextElements)
+            if(to < stringInfo.LengthInTextElements)
             {
-                builder.Append(stringInfo.SubstringByTextElements(to + 1));
+                builder.Append(stringInfo.SubstringByTextElements(to));
             }
 
             for(var i = from; i <= to; i++)
@@ -201,7 +202,7 @@ namespace Terminal.Rows
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
-        public void InsertCharacterAt(int x, string what, Color? foreground = null, Color? background = null)
+        public bool InsertCharacterAt(int x, string what, Color? foreground = null, Color? background = null)
         {
             #if DEBUG
             if(new StringInfo(what).LengthInTextElements != 1)
@@ -261,7 +262,13 @@ namespace Terminal.Rows
             }
 
             content = builder.ToString();
+            var oldLengthInTextElements = lengthInTextElements;
             lengthInTextElements = Math.Max(x + 1, lengthInTextElements);
+
+            var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
+            var result = DivisionWithCeiling(oldLengthInTextElements == 0 ? 1 : oldLengthInTextElements, charsOnLine)
+                != DivisionWithCeiling(lengthInTextElements == 0 ? 1 : lengthInTextElements, charsOnLine);
+            return result;
         }
 
         public static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
@@ -271,20 +278,31 @@ namespace Terminal.Rows
             return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
         }
 
-        public string Content
+        public int LineCount
         {
             get
             {
-                return content;
-            }
-            set
-            {
-                content = value;
-                lengthInTextElements = new StringInfo(content).LengthInTextElements;
+                return lineCount;
             }
         }
 
-        public int MaxOffset { get; set; }
+        public double LineHeight
+        {
+            get
+            {
+                return lineSize.Height;
+            }
+        }
+
+        public int CurrentMaximalCursorPosition
+        {
+            get
+            {
+                return MaximalColumn * LineCount;
+            }
+        }
+
+        public int MaximalColumn { get; private set; }
 
         private void CheckDictionary(ref Dictionary<int, Color> dictionary)
         {
@@ -309,12 +327,24 @@ namespace Terminal.Rows
             }
         }
 
+        private static int DivisionWithCeiling(int dividend, int divisor)
+        {
+#if DEBUG
+            if(divisor <= 0 || dividend < 0)
+            {
+                throw new ArgumentException("Dividend has to be >= 0, divisor has to be > 0.");
+            }
+#endif
+            return (dividend + divisor - 1) / divisor;
+        }
+
         private Color GetSelectionForegroundColor(int index)
         {
             return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : Colors.Black;
         }
 
         private double charWidth;
+        private int lineCount;
         private Size lineSize;
         private TextLayout textLayout;
         private string selectedContent;

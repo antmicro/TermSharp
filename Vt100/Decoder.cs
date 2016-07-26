@@ -42,7 +42,7 @@ namespace Terminal.Vt100
                 }
                 else if(ControlByte.Backspace == (ControlByte)c)
                 {
-                    cursor.Position = cursor.Position.ShiftedByX(-1);
+                    CursorLeft();
                 }
                 else if(ControlByte.Escape == (ControlByte)c)
                 {
@@ -54,13 +54,13 @@ namespace Terminal.Vt100
                     {
                         terminal.AppendRow(new MonospaceTextRow(string.Empty));
                     }
-                    var newPosition = cursor.Position.WithX(1);
+                    var newPosition = terminal.Cursor.Position.WithX(0);
                     newPosition = newPosition.ShiftedByY(1);
-                    cursor.Position = newPosition;
+                    terminal.Cursor.Position = newPosition;
                 }
                 else if(ControlByte.CarriageReturn == (ControlByte)c)
                 {
-                    cursor.Position = cursor.Position.WithX(1);
+                    terminal.Cursor.Position = terminal.Cursor.Position.WithX(0);
                 }
                 else if(ControlByte.Bell == (ControlByte)c)
                 {
@@ -109,22 +109,36 @@ namespace Terminal.Vt100
 
         public event Action BellReceived;
 
-        private void InsertCharacterAt(IntegerPosition where, string what)
+        private void InsertCharacterAtCursor(string textElement)
         {
-            var textRow = terminal.GetScreenRow(where.Y - 1) as MonospaceTextRow;
+            var textRow = terminal.GetScreenRow(terminal.Cursor.Position.Y) as MonospaceTextRow;
             if(textRow == null)
             {
                 throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
             }
-            textRow.InsertCharacterAt(where.X - 1, what, CurrentForeground, CurrentBackground);
+            if(textRow.InsertCharacterAt(terminal.Cursor.Position.X, textElement, CurrentForeground, CurrentBackground))
+            {
+                terminal.Refresh();
+            }
         }
 
         private void HandleRegularCharacter(string textElement)
         {
-            InsertCharacterAt(cursor.Position, textElement);
-            cursor.Position = cursor.Position.ShiftedByX(1);
+            if(cursorAtTheEndOfLine)
+            {
+                terminal.Cursor.Position = terminal.Cursor.Position.ShiftedByX(1);
+                cursorAtTheEndOfLine = false;
+            }
+            InsertCharacterAtCursor(textElement);
+            if(terminal.Cursor.Position.X != ((MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y)).MaximalColumn)
+            {
+                terminal.Cursor.Position = terminal.Cursor.Position.ShiftedByX(1);
+            }
+            else
+            {
+                cursorAtTheEndOfLine = true;
+            }
             terminal.Cursor.StayOnForNBlinks(CharReceivedBlinkDisabledRounds);
-            terminal.Redraw();
         }
 
         private void HandleAnsiCode(char c)
@@ -150,7 +164,6 @@ namespace Terminal.Vt100
             {
                 if(commands.ContainsKey(c))
                 {
-                    
                     // let's extract parameters
                     var splitted = csiCodeData.ToString().Split(';');
                     currentParams = splitted.Select(x => string.IsNullOrEmpty(x) ? (int?)null : int.Parse(x)).ToArray();
@@ -220,6 +233,7 @@ namespace Terminal.Vt100
         private int?[] currentParams;
         private bool inAnsiCode;
         private bool privateModeCode;
+        private bool cursorAtTheEndOfLine;
         private StringBuilder csiCodeData;
         private readonly Terminal terminal;
         private readonly Cursor cursor;
@@ -245,16 +259,61 @@ namespace Terminal.Vt100
             {
                 get
                 {
-                    return parent.terminal.Cursor.Position.ShiftedBy(1, 1);
+                    var terminalPosition = parent.terminal.Cursor.Position;
+                    var resultY = 0;
+                    for(var i = 0; i < terminalPosition.Y; i++)
+                    {
+                        resultY += ((MonospaceTextRow)parent.terminal.GetScreenRow(i)).LineCount;
+                    }
+
+                    // it can happen that the first row is partially hidden
+                    // our vt100 cursor should be counted from the first completely displayed subrow of the first row
+                    double hiddenHeight;
+                    var firstRow = (MonospaceTextRow)parent.terminal.GetFirstScreenRow(out hiddenHeight);
+                    resultY -= (int)Math.Ceiling(hiddenHeight / firstRow.LineHeight);
+
+                    // it can happen that normal cursor is not in vt100 cursor range which gives us negative result here
+                    // in such case we report Y = 0
+                    if(resultY < 0)
+                    {
+                        resultY = 0;
+                    }
+
+                    var charsInRow = ((MonospaceTextRow)parent.terminal.GetScreenRow(terminalPosition.Y)).MaximalColumn + 1;
+                    var resultX = terminalPosition.X % charsInRow;
+                    resultY += terminalPosition.X / charsInRow;
+                    return new IntegerPosition(resultX + 1, resultY + 1);
                 }
                 set
                 {
-                    var valueToSet = value.ShiftedBy(-1, -1);
-                    if(valueToSet != parent.terminal.Cursor.Position)
+                    parent.cursorAtTheEndOfLine = false;
+
+                    double hiddenPart;
+                    var firstRow = (MonospaceTextRow)parent.terminal.GetFirstScreenRow(out hiddenPart);
+
+                    var maxX = firstRow.MaximalColumn + 1;
+                    var maxY = (int)Math.Floor(parent.terminal.ScreenSize / firstRow.LineHeight);
+                    value = new IntegerPosition(Math.Min(value.X, maxX), Math.Min(value.Y, maxY));
+                    value = new IntegerPosition(Math.Max(value.X, 1), Math.Max(value.Y, 1));
+
+                    var resultY = 0;
+                    var vt100Y = value.Y;
+
+                    // in the case of first row we only count its visible part
+                    vt100Y -= firstRow.LineCount - (int)Math.Ceiling(hiddenPart / firstRow.LineHeight);
+                    while(vt100Y > 0)
                     {
-                        parent.terminal.Cursor.Position = valueToSet;
-                        parent.terminal.Cursor.StayOnForNBlinks(1);
+                        resultY++;
+                        if(resultY >= parent.terminal.ScreenRowCount)
+                        {
+                            parent.terminal.AppendRow(new MonospaceTextRow(""));
+                        }
+
+                        vt100Y -= ((MonospaceTextRow)parent.terminal.GetScreenRow(resultY)).LineCount;
                     }
+                    var row = (MonospaceTextRow)parent.terminal.GetScreenRow(resultY);
+                    var resultX = (row.LineCount - 1 + vt100Y) * (row.MaximalColumn + 1) + value.X - 1;
+                    parent.terminal.Cursor.Position = new IntegerPosition(resultX, resultY);
                 }
             }
 
