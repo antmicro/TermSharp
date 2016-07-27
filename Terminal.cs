@@ -209,6 +209,8 @@ namespace Terminal
             }
         }
 
+        public Menu ContextMenu { get; set; }
+
         public new event EventHandler<KeyEventArgs> KeyPressed
         {
             add
@@ -233,26 +235,41 @@ namespace Terminal
         private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
         {
             canvas.SetFocus();
-            var position = e.Position;
-            position.Y += scrollbar.Value;
-            currentScrollStart = position;
-            foreach(var row in rows)
+
+            if(e.Button == PointerButton.Left)
             {
-                row.ResetSelection();
+                var position = e.Position;
+                position.Y += scrollbar.Value;
+                currentScrollStart = position;
+                foreach(var row in rows)
+                {
+                    row.ResetSelection();
+                }
+            }
+            if(e.Button == PointerButton.Right)
+            {
+                var contextMenu = ContextMenu;
+                if(contextMenu != null)
+                {
+                    contextMenu.Popup();
+                }
             }
         }
 
         private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
         {
-            SetAutoscrollValue(0);
-            var mousePosition = e.Position;
-            mousePosition.Y += scrollbar.Value;
-            if(mousePosition == (currentScrollStart ?? default(Point)))
+            if(e.Button == PointerButton.Left)
             {
-                canvas.SelectedArea = default(Rectangle);
+                SetAutoscrollValue(0);
+                var mousePosition = e.Position;
+                mousePosition.Y += scrollbar.Value;
+                if(mousePosition == (currentScrollStart ?? default(Point)))
+                {
+                    canvas.SelectedArea = default(Rectangle);
+                }
+                currentScrollStart = null;
+                RefreshSelection();
             }
-            currentScrollStart = null;
-            RefreshSelection();
         }
 
         private void OnCanvasMouseMoved(object sender, MouseMovedEventArgs e)
