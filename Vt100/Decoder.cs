@@ -42,6 +42,7 @@ namespace Terminal.Vt100
                 }
                 else if(ControlByte.Backspace == (ControlByte)c)
                 {
+                    currentParams = new int?[] { 1 };
                     CursorLeft();
                 }
                 else if(ControlByte.Escape == (ControlByte)c)
