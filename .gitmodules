@@ -1,0 +1,3 @@
+[submodule "xwt"]
+	path = xwt
+	url = https://github.com/mono/xwt.git

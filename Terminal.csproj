@@ -31,9 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Xwt">
-      <HintPath>..\..\gits\xwt\TestApps\MacTest\bin\Debug\Xwt.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LayoutParameters.cs" />
@@ -61,6 +58,12 @@
     <Folder Include="Rows\" />
     <Folder Include="Vt100\" />
     <Folder Include="Misc\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="xwt\Xwt\Xwt.csproj">
+      <Project>{92494904-35FA-4DC9-BDE9-3A3E87AC49D3}</Project>
+      <Name>Xwt</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
