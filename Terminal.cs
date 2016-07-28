@@ -114,6 +114,19 @@ namespace Terminal
             SetScrollbarValue(scrollbar.UpperValue - canvas.Bounds.Height);
         }
 
+        public Font CurrentFont
+        {
+            get
+            {
+                return layoutParameters.Font;
+            }
+            set
+            {
+                layoutParameters.Font = value;
+                Redraw();
+            }
+        }
+
         public int RowCount
         {
             get
@@ -415,7 +428,7 @@ namespace Terminal
 
         private void PrepareLayoutParameters()
         {
-            layoutParameters.Font = Font.WithFamily("Monaco").WithSize(12);
+            layoutParameters.Font = Font.SystemMonospaceFont;
         }
 
         private bool RebuildHeightMap(bool continueEvenIfLongTask = true)
