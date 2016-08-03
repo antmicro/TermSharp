@@ -73,12 +73,7 @@ namespace Terminal.Vt100
 
         private void SelectGraphicRendition()
         {
-            if(currentParams.Length == 1 && (currentParams[0] ?? 0) == 0)
-            {
-                CurrentForeground = null;
-                CurrentBackground = null;
-                return;
-            }
+            var onlyZeros = true;
 
             var bright = false;
             var foregroundColorIndex = -1;
@@ -92,6 +87,10 @@ namespace Terminal.Vt100
                     continue;
                 }
                 var value = parameter.Value;
+                if(value != 0)
+                {
+                    onlyZeros = false;
+                }
                 if(value == 1)
                 {
                     bright = true;
@@ -122,6 +121,12 @@ namespace Terminal.Vt100
                 {
                     logger.Log(string.Format("Unimplemented SGR code {0}.", value));
                 }
+            }
+            if(onlyZeros)
+            {
+                CurrentForeground = null;
+                CurrentBackground = null;
+                return;
             }
             if(foregroundColorIndex != -1)
             {
