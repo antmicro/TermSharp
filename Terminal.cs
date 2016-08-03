@@ -76,6 +76,13 @@ namespace Terminal
             canvas.Redraw();
         }
 
+        public void ClearSelection()
+        {
+            canvas.SelectedArea = default(Rectangle);
+            currentScrollStart = null;
+            RefreshSelection();
+        }
+
         public ClipboardData CollectClipboardData()
         {
             var result = new ClipboardData();
