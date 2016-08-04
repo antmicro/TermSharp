@@ -32,6 +32,7 @@ namespace Terminal
             PackStart(canvas, true, true);
             scrollbar = new VScrollbar();
             scrollbar.Sensitive = false;
+
             PackEnd(scrollbar);
 
             canvas.MouseScrolled += OnCanvasMouseScroll;
@@ -74,6 +75,16 @@ namespace Terminal
         public void Redraw()
         {
             canvas.Redraw();
+        }
+
+        public void PageUp()
+        {
+            SetScrollbarValue(scrollbar.Value - scrollbar.PageSize);
+        }
+
+        public void PageDown()
+        {
+            SetScrollbarValue(scrollbar.Value + scrollbar.PageSize);
         }
 
         public void ClearSelection()
