@@ -93,10 +93,6 @@ namespace Terminal.Vt100
             {
                 dataCallback((byte)(key - Key.At));
             }
-            else
-            {
-                throw new NotImplementedException("Unimplemented key with control modifier.");
-            }
         }
 
         private readonly Action<byte> dataCallback;
