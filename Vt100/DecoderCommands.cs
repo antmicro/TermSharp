@@ -117,7 +117,7 @@ namespace Terminal.Vt100
                     i++;
                     CurrentBackground = GetExtendedColor(ref i);
                 }
-                else
+                else if(value != 0)
                 {
                     logger.Log(string.Format("Unimplemented SGR code {0}.", value));
                 }
