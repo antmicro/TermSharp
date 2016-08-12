@@ -125,13 +125,15 @@ namespace Terminal.Vt100
 
         private void HandleRegularCharacter(string textElement)
         {
+            var oldPosition = terminal.Cursor.Position;
             if(cursorAtTheEndOfLine)
             {
                 terminal.Cursor.Position = terminal.Cursor.Position.ShiftedByX(1);
                 cursorAtTheEndOfLine = false;
             }
             InsertCharacterAtCursor(textElement);
-            if(terminal.Cursor.Position.X != ((MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y)).MaximalColumn)
+            var maximalColumn = ((MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y)).MaximalColumn;
+            if(terminal.Cursor.Position.X % (maximalColumn + 1) != maximalColumn)
             {
                 terminal.Cursor.Position = terminal.Cursor.Position.ShiftedByX(1);
             }
