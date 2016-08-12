@@ -36,8 +36,17 @@ namespace Terminal.Rows
             textLayout = TextLayoutCache.GetValue(parameters);
             lineSize = LineSizeCache.GetValue(parameters);
             charWidth = CharSizeCache.GetValue(parameters).Width;
+
+            if(lineSize.Width == 0)
+            {
+                return 0;
+            }
+
             MaximalColumn = ((int)(lineSize.Width / charWidth)) - 1;
-            lineCount = (int)Math.Ceiling((lengthInTextElements == 0 ? 1 : lengthInTextElements) * charWidth / lineSize.Width);
+
+            var charsOnLine = MaximalColumn + 1;
+            var lengthInTextElementsAtLeastOne = lengthInTextElements == 0 ? 1 : lengthInTextElements; // because even empty line has height of one line
+            lineCount = DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine);
             return lineSize.Height * lineCount;
         }
 
@@ -45,7 +54,7 @@ namespace Terminal.Rows
         {
             ctx.SetColor(defaultForeground);
             var newLinesAt = new List<int> { 0 };
-            var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
+            var charsOnLine = MaximalColumn + 1;
 
             var result = new StringBuilder();
             var enumerator = StringInfo.GetTextElementEnumerator(content);
