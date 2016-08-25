@@ -33,6 +33,7 @@ namespace Terminal.Vt100
                 ignoreNextChar = false;
                 return;
             }
+            terminal.Cursor.StayOnForNBlinks(CharReceivedBlinkDisabledRounds);
             if(textElement.Length == 1)
             {
                 var c = textElement[0];
@@ -141,7 +142,6 @@ namespace Terminal.Vt100
             {
                 cursorAtTheEndOfLine = true;
             }
-            terminal.Cursor.StayOnForNBlinks(CharReceivedBlinkDisabledRounds);
         }
 
         private void HandleAnsiCode(char c)
