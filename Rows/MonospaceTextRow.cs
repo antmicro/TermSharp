@@ -31,6 +31,7 @@ namespace Terminal.Rows
 
         public double PrepareForDrawing(ILayoutParameters parameters)
         {
+            cursorInRow = null;
             defaultForeground = parameters.DefaultForeground;
             selectionColor = parameters.SelectionColor;
             textLayout = TextLayoutCache.GetValue(parameters);
@@ -135,7 +136,11 @@ namespace Terminal.Rows
             {
                 textLayout.SetBackground(entry.Item3, entry.Item1, entry.Item2);
             }
-
+            if(cursorInRow.HasValue)
+            {
+                // we draw a rectangle AND set background so that one can see cursor in a row without character
+                textLayout.SetForeground(Colors.Black, cursorInRow.Value, 1);
+            }
             ctx.DrawTextLayout(textLayout, 0, 0);
             textLayout.ClearAttributes();
         }
@@ -154,6 +159,7 @@ namespace Terminal.Rows
             if(focused)
             {
                 ctx.Fill();
+                cursorInRow = offset;
             }
             else
             {
@@ -361,6 +367,7 @@ namespace Terminal.Rows
         private Color defaultForeground;
         private Color selectionColor;
         private int lengthInTextElements;
+        private int? cursorInRow;
         private Dictionary<int, Color> specialForegrounds;
         private Dictionary<int, Color> specialBackgrounds;
 
