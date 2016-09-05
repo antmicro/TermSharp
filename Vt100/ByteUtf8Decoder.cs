@@ -5,6 +5,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Terminal.Vt100
@@ -16,7 +17,7 @@ namespace Terminal.Vt100
             this.charDecodedCallback = charDecodedCallback;
             utfBytes = new byte[4];
             utf8Decoder = Encoding.UTF8.GetDecoder();
-            result = new char[2];
+            result = new char[4];
         }
 
         public void Feed(byte b)
@@ -30,7 +31,11 @@ namespace Terminal.Vt100
             {
                 var utf16CharCount = utf8Decoder.GetChars(utfBytes, 0, currentCount, result, 0, true);
                 var resultAsString = new string(result, 0, utf16CharCount);
-                charDecodedCallback(resultAsString);
+                var textElements = StringInfo.GetTextElementEnumerator(resultAsString);
+                while(textElements.MoveNext())
+                {
+                    charDecodedCallback((string)textElements.Current);
+                }
                 currentCount = 0;
                 currentIndex = 0;
             }
