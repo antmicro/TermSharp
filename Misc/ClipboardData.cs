@@ -30,7 +30,7 @@ namespace Terminal.Misc
                 {
                     return string.Empty;
                 }
-                return rows.Skip(1).Aggregate(rows[0], (x, y) => x + Environment.NewLine + y);
+                return string.Join(Environment.NewLine, rows);
             }
         }
 

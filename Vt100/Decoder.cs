@@ -76,24 +76,21 @@ namespace Terminal.Vt100
                 {
                     HandleRegularCharacter(" ");
                 }
-                else
+                else if(char.IsControl(c))
                 {
-                    if(char.IsControl(c))
+                    if(c < 32)
                     {
-                        if(c < 32)
-                        {
-                            Feed("^");
-                            Feed(((char)(c + 64)).ToString());
-                        }
-                        else
-                        {
-                            logger.Log(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
-                        }
+                        Feed("^");
+                        Feed(((char)(c + 64)).ToString());
                     }
                     else
                     {
-                        HandleRegularCharacter(textElement);
+                        logger.Log(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
                     }
+                }
+                else
+                {
+                    HandleRegularCharacter(textElement);
                 }
             }
             else

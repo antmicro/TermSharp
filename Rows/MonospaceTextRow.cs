@@ -6,6 +6,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -19,12 +20,7 @@ namespace Terminal.Rows
     {
         public MonospaceTextRow(string content)
         {
-#if DEBUG
-            if(content.Contains("\n"))
-            {
-                throw new ArgumentException("Content cannot contain a newline character.");
-            }
-#endif
+            Debug.Assert(content.Contains("\n"));
             this.content = content;
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
@@ -286,13 +282,6 @@ namespace Terminal.Rows
             return result;
         }
 
-        public static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
-        {
-            var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
-            textLayout.Text = "a\na";
-            return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
-        }
-
         public int LineCount
         {
             get
@@ -372,7 +361,7 @@ namespace Terminal.Rows
         private Dictionary<int, Color> specialBackgrounds;
 
         private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
-        private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(GetLineSizeFromLayoutParams);
+        private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetLineSizeFromLayoutParams);
         private static readonly SimpleCache<ILayoutParameters, Size> CharSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
     }
 }

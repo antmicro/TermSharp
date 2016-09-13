@@ -10,10 +10,10 @@ namespace Terminal
 {
     internal class LayoutParameters : ILayoutParameters
     {
-        public LayoutParameters(Font font, Color defaultForeground, Color selectionColor)
+        public LayoutParameters(Font font, Color defaultForegroundColor, Color selectionColor)
         {
             this.font = font;
-            this.defaultForeground = defaultForeground;
+            this.defaultForegroundColor = defaultForegroundColor;
             this.selectionColor = selectionColor;
         }
 
@@ -25,6 +25,10 @@ namespace Terminal
             }
             set
             {
+                if(font == value)
+                {
+                    return;
+                }
                 font = value;
                 UpdateGeneration();
             }
@@ -51,15 +55,15 @@ namespace Terminal
         {
             get
             {
-                return defaultForeground;
+                return defaultForegroundColor;
             }
             set
             {
-                if(value == defaultForeground)
+                if(value == defaultForegroundColor)
                 {
                     return;
                 }
-                defaultForeground = value;
+                defaultForegroundColor = value;
                 UpdateGeneration();
             }
         }
@@ -96,7 +100,7 @@ namespace Terminal
 
         private Font font;
         private int generation;
-        private Color defaultForeground;
+        private Color defaultForegroundColor;
         private Color selectionColor;
         private double width;
     }

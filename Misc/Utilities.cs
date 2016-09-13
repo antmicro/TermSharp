@@ -31,6 +31,13 @@ namespace Terminal.Misc
             result.Font = parameters.Font;
             return result;
         }
+
+        public static Size GetLineSizeFromLayoutParams(ILayoutParameters parameters)
+        {
+            var textLayout = Utilities.GetTextLayoutFromLayoutParams(parameters);
+            textLayout.Text = "a\na";
+            return new Size(parameters.Width, textLayout.GetCoordinateFromIndex(2).Y);
+        }
     }
 }
 

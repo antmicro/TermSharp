@@ -46,7 +46,7 @@ namespace Terminal
             HandleAutoscrollAsync();
             canvas.CanGetFocus = true;
             AppendRow(new MonospaceTextRow(""));
-            scrollbar.StepIncrement = MonospaceTextRow.GetLineSizeFromLayoutParams(layoutParameters).Height;
+            scrollbar.StepIncrement = Utilities.GetLineSizeFromLayoutParams(layoutParameters).Height;
         }
 
         public void AppendRow(IRow row)
@@ -525,7 +525,7 @@ namespace Terminal
 
         private int FindRowIndexAtPosition(double position, out double rowStart)
         {
-            var result = Array.BinarySearch(heightMap, position);
+            var result = Array.BinarySearch<double>(heightMap, position);
             if(result < 0)
             {
                 result = ~result;

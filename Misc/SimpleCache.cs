@@ -26,7 +26,6 @@ namespace Terminal.Misc
                 }
                 lastResult = factory(from);
                 generation = from.Generation;
-
             }
             return lastResult;
         }
@@ -36,4 +35,3 @@ namespace Terminal.Misc
         private int generation;
     }
 }
-
