@@ -10,17 +10,17 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using Terminal.Misc;
+using TermSharp.Misc;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal.Rows
+namespace TermSharp.Rows
 {
     public class MonospaceTextRow : IRow
     {
         public MonospaceTextRow(string content)
         {
-            Debug.Assert(content.Contains("\n"));
+            Debug.Assert(!content.Contains("\n"));
             this.content = content;
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
@@ -50,7 +50,7 @@ namespace Terminal.Rows
         public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
         {
             ctx.SetColor(defaultForeground);
-            var newLinesAt = new List<int> { 0 };
+            var newLinesAt = new List<int> { 0 }; // contains indices of line wraps (i.e. \n)
             var charsOnLine = MaximalColumn + 1;
 
             var result = new StringBuilder();
@@ -75,16 +75,16 @@ namespace Terminal.Rows
             {
                 var textWithNewLines = textLayout.Text;
 
-                var startRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor(selectedArea.Y / lineSize.Height));
-                var endRow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
-                var startColumn = (int)Math.Round(selectedArea.X / charWidth);
-                var endColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
+                var firstSubrow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor(selectedArea.Y / lineSize.Height));
+                var lastSubrow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
+                var firstColumn = (int)Math.Round(selectedArea.X / charWidth);
+                var lastColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
 
                 if(selectionMode == SelectionMode.Block)
                 {
-                    for(var i = startRow; i <= endRow; i++)
+                    for(var i = firstSubrow; i <= lastSubrow; i++)
                     {
-                        for(var j = startColumn; j <= endColumn; j++)
+                        for(var j = firstColumn; j <= lastColumn; j++)
                         {
                             foregroundColors[(charsOnLine + 1) * i + j] = GetSelectionForegroundColor(i);
                             backgroundColors[(charsOnLine + 1) * i + j] = selectionColor;
@@ -95,28 +95,28 @@ namespace Terminal.Rows
                 {
                     if(selectionDirection == SelectionDirection.NW)
                     {
-                        Utilities.Swap(ref startColumn, ref endColumn);
-                        Utilities.Swap(ref startRow, ref endRow);
+                        Utilities.Swap(ref firstColumn, ref lastColumn);
+                        Utilities.Swap(ref firstSubrow, ref lastSubrow);
                     }
 
-                    var startIndex = startColumn + newLinesAt[startRow];
-                    var endIndex = endColumn + newLinesAt[endRow];
+                    var firstIndex = firstColumn + newLinesAt[firstSubrow];
+                    var lastIndex = lastColumn + newLinesAt[lastSubrow];
 
-                    if(endIndex < startIndex)
+                    if(lastIndex < firstIndex)
                     {
-                        Utilities.Swap(ref startIndex, ref endIndex);
+                        Utilities.Swap(ref firstIndex, ref lastIndex);
                     }
 
                     var textWithNewLinesStringInfo = new StringInfo(textWithNewLines);
-                    startIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, startIndex));
-                    endIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, endIndex));
+                    firstIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, firstIndex));
+                    lastIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, lastIndex));
 
-                    for(var i = startIndex; i <= endIndex; i++)
+                    for(var i = firstIndex; i <= lastIndex; i++)
                     {
                         foregroundColors[i] = GetSelectionForegroundColor(i);
                         backgroundColors[i] = selectionColor;
                     }
-                    selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(startIndex, endIndex - startIndex + 1);
+                    selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(firstIndex, lastIndex - firstIndex + 1);
                 }
             }
             else
@@ -213,68 +213,62 @@ namespace Terminal.Rows
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
-        public bool InsertCharacterAt(int x, string what, Color? foreground = null, Color? background = null)
+        public bool InsertCharacterAt(int position, string what, Color? foreground = null, Color? background = null)
         {
-            #if DEBUG
-            if(new StringInfo(what).LengthInTextElements != 1)
-            {
-                throw new ArgumentException("Character to add have to has length = 1.");
-            }
-            #endif
+            Debug.Assert(new StringInfo(what).LengthInTextElements == 1);
 
             if(foreground.HasValue)
             {
                 CheckDictionary(ref specialForegrounds);
-                specialForegrounds[x] = foreground.Value;
+                specialForegrounds[position] = foreground.Value;
             }
             else
             {
                 if(specialForegrounds != null)
                 {
-                    specialForegrounds.Remove(x);
+                    specialForegrounds.Remove(position);
                 }
             }
 
             if(background.HasValue)
             {
                 CheckDictionary(ref specialBackgrounds);
-                specialBackgrounds[x] = background.Value;
+                specialBackgrounds[position] = background.Value;
             }
             else
             {
                 if(specialBackgrounds != null)
                 {
-                    specialBackgrounds.Remove(x);
+                    specialBackgrounds.Remove(position);
                 }
             }
 
             var stringInfo = new StringInfo(content);
             StringBuilder builder;
-            if(x > 0)
+            if(position > 0)
             {
-                if(lengthInTextElements < x)
+                if(lengthInTextElements < position)
                 {
                     builder = new StringBuilder(content);
-                    builder.Append(' ', x - lengthInTextElements);
+                    builder.Append(' ', position - lengthInTextElements).Append(what);
                 }
                 else
                 {
-                    builder = new StringBuilder(stringInfo.SubstringByTextElements(0, x));
+                    builder = new StringBuilder(stringInfo.SubstringByTextElements(0, position)).Append(what);
                 }
             }
             else
             {
-                builder = new StringBuilder();
+                builder = new StringBuilder(what);
             }
-            builder.Append(what);
-            if(lengthInTextElements > x + 1)
+            if(lengthInTextElements > position + 1)
             {
-                builder.Append(stringInfo.SubstringByTextElements(x + 1));
+                builder.Append(stringInfo.SubstringByTextElements(position + 1));
             }
 
             content = builder.ToString();
             var oldLengthInTextElements = lengthInTextElements;
-            lengthInTextElements = Math.Max(x + 1, lengthInTextElements);
+            lengthInTextElements = Math.Max(position + 1, lengthInTextElements);
 
             var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
             var result = DivisionWithCeiling(oldLengthInTextElements == 0 ? 1 : oldLengthInTextElements, charsOnLine)
@@ -282,7 +276,7 @@ namespace Terminal.Rows
             return result;
         }
 
-        public int LineCount
+        public int SublineCount
         {
             get
             {
@@ -302,7 +296,7 @@ namespace Terminal.Rows
         {
             get
             {
-                return MaximalColumn * LineCount;
+                return MaximalColumn * SublineCount;
             }
         }
 
@@ -333,12 +327,7 @@ namespace Terminal.Rows
 
         private static int DivisionWithCeiling(int dividend, int divisor)
         {
-#if DEBUG
-            if(divisor <= 0 || dividend < 0)
-            {
-                throw new ArgumentException("Dividend has to be >= 0, divisor has to be > 0.");
-            }
-#endif
+            Debug.Assert(divisor > 0 && dividend > 0);
             return (dividend + divisor - 1) / divisor;
         }
 

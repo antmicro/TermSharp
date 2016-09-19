@@ -5,11 +5,9 @@
 //
 using System;
 using System.Threading.Tasks;
-using Terminal.Misc;
-using Xwt;
-using Xwt.Drawing;
+using TermSharp.Misc;
 
-namespace Terminal
+namespace TermSharp
 {
     public sealed class Cursor
     {

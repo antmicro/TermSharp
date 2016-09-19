@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Terminal.Misc;
-using Terminal.Rows;
+using TermSharp.Misc;
+using TermSharp.Rows;
 using Xwt.Drawing;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public sealed partial class Decoder
     {
@@ -56,9 +56,7 @@ namespace Terminal.Vt100
                     {
                         terminal.AppendRow(new MonospaceTextRow(string.Empty));
                     }
-                    var newPosition = terminal.Cursor.Position.WithX(0);
-                    newPosition = newPosition.ShiftedByY(1);
-                    terminal.Cursor.Position = newPosition;
+                    terminal.Cursor.Position = terminal.Cursor.Position.WithX(0).ShiftedByY(1);
                 }
                 else if(ControlByte.CarriageReturn == (ControlByte)c)
                 {
@@ -145,7 +143,7 @@ namespace Terminal.Vt100
         {
             if(csiCodeData == null)
             {
-                if(ControlByte.Csi != (ControlByte)c)
+                if(ControlByte.ControlSequenceIntroducer != (ControlByte)c)
                 {
                     HandleNonCsiCode(c);
                     inAnsiCode = false;
@@ -263,7 +261,7 @@ namespace Terminal.Vt100
                     var resultY = 0;
                     for(var i = 0; i < terminalPosition.Y; i++)
                     {
-                        resultY += ((MonospaceTextRow)parent.terminal.GetScreenRow(i)).LineCount;
+                        resultY += ((MonospaceTextRow)parent.terminal.GetScreenRow(i)).SublineCount;
                     }
 
                     // it can happen that the first row is partially hidden
@@ -300,7 +298,7 @@ namespace Terminal.Vt100
                     var vt100Y = value.Y;
 
                     // in the case of first row we only count its visible part
-                    vt100Y -= firstRow.LineCount - (int)Math.Ceiling(hiddenPart / firstRow.LineHeight);
+                    vt100Y -= firstRow.SublineCount - (int)Math.Ceiling(hiddenPart / firstRow.LineHeight);
                     while(vt100Y > 0)
                     {
                         resultY++;
@@ -309,10 +307,10 @@ namespace Terminal.Vt100
                             parent.terminal.AppendRow(new MonospaceTextRow(""));
                         }
 
-                        vt100Y -= ((MonospaceTextRow)parent.terminal.GetScreenRow(resultY)).LineCount;
+                        vt100Y -= ((MonospaceTextRow)parent.terminal.GetScreenRow(resultY)).SublineCount;
                     }
                     var row = (MonospaceTextRow)parent.terminal.GetScreenRow(resultY);
-                    var resultX = (row.LineCount - 1 + vt100Y) * (row.MaximalColumn + 1) + value.X - 1;
+                    var resultX = (row.SublineCount - 1 + vt100Y) * (row.MaximalColumn + 1) + value.X - 1;
                     parent.terminal.Cursor.Position = new IntegerPosition(resultX, resultY);
                 }
             }

@@ -4,11 +4,10 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public sealed class ByteUtf8Decoder
     {

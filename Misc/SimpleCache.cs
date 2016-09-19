@@ -5,7 +5,7 @@
 //
 using System;
 
-namespace Terminal.Misc
+namespace TermSharp.Misc
 {
     internal sealed class SimpleCache<TFrom, TTo> where TFrom : IGenerationAware
     {

@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Terminal.Misc;
-using Terminal.Rows;
+using TermSharp.Misc;
+using TermSharp.Rows;
 using Xwt.Drawing;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public partial class Decoder
     {
@@ -68,7 +68,7 @@ namespace Terminal.Vt100
         {
             var row = GetParamOrDefault(0, 1);
             var column = GetParamOrDefault(1, 1);
-            cursor.Position = cursor.Position.WithY(row).WithX(column);
+            cursor.Position = new IntegerPosition(column, row);
         }
 
         private void SelectGraphicRendition()
@@ -202,8 +202,8 @@ namespace Terminal.Vt100
                 return;
             }
             var response = new List<byte>();
-            response.AddRange(new[] { (byte)ControlByte.Escape, (byte)ControlByte.Csi });
-            response.AddRange(Encoding.ASCII.GetBytes(cursor.Position.Y.ToString() + ';' + cursor.Position.X + 'R'));
+            response.AddRange(new[] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer });
+            response.AddRange(Encoding.ASCII.GetBytes(string.Format("{0};{1}R", cursor.Position.Y, cursor.Position.X)));
             SendResponse(response);
         }
 
@@ -227,7 +227,7 @@ namespace Terminal.Vt100
             {
                 return;
             }
-            SendResponse(new[] { (byte)ControlByte.LineFeed, (byte)ControlByte.Escape, (byte)ControlByte.Csi }.Union(Encoding.ASCII.GetBytes("?1;2c")));
+            SendResponse(new[] { (byte)ControlByte.LineFeed, (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer }.Union(Encoding.ASCII.GetBytes("?1;2c")));
         }
 
         private void SetMode()

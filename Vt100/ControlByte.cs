@@ -3,9 +3,8 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public enum ControlByte : byte
     {
@@ -15,7 +14,7 @@ namespace Terminal.Vt100
         HorizontalTab = 0x09,
         CarriageReturn = 0xD,
         Escape = 0x1B,
-        Csi = (byte)'[',
+        ControlSequenceIntroducer = (byte)'[',
         Delete = 0x7F
     }
 }

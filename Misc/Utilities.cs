@@ -3,11 +3,10 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal.Misc
+namespace TermSharp.Misc
 {
     internal static class Utilities
     {
@@ -22,7 +21,7 @@ namespace Terminal.Misc
         {
             var textLayout = GetTextLayoutFromLayoutParams(parameters);
             textLayout.Text = "a\na";
-            return new Size(textLayout.GetCoordinateFromIndex(1).X, textLayout.GetCoordinateFromIndex(3).Y);
+            return new Size(textLayout.GetCoordinateFromIndex(1).X, textLayout.GetCoordinateFromIndex(2).Y);
         }
 
         public static TextLayout GetTextLayoutFromLayoutParams(ILayoutParameters parameters)

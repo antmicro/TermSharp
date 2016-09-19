@@ -3,8 +3,8 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
-namespace Terminal
+
+namespace TermSharp
 {
     public enum SelectionDirection
     {

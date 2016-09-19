@@ -3,13 +3,13 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public interface IDecoderLogger
     {
         void Log(string message);
+        void Log(string format, params object[] args);
     }
 }
 

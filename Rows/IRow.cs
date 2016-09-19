@@ -3,12 +3,11 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
-using Terminal.Misc;
+using TermSharp.Misc;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal.Rows
+namespace TermSharp.Rows
 {
     public interface IRow
     {

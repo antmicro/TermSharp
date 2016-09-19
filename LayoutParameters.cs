@@ -6,7 +6,7 @@
 using System;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace TermSharp
 {
     internal class LayoutParameters : ILayoutParameters
     {

@@ -3,11 +3,10 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
-using System;
-using Terminal.Misc;
+using TermSharp.Misc;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace TermSharp
 {
     public interface ILayoutParameters : IGenerationAware
     {

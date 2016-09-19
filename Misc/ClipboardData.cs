@@ -5,10 +5,8 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Terminal.Misc
+namespace TermSharp.Misc
 {
     public sealed class ClipboardData
     {

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using Xwt;
 
-namespace Terminal.Vt100
+namespace TermSharp.Vt100
 {
     public sealed class Encoder
     {
@@ -20,16 +20,16 @@ namespace Terminal.Vt100
                 { Key.Return, new [] { (byte)ControlByte.CarriageReturn } },
                 { Key.BackSpace, new [] { (byte)ControlByte.Delete } },
                 { Key.Tab, new [] { (byte)ControlByte.HorizontalTab } },
-                { Key.Up, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'A' } },
-                { Key.Down, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'B' } },
-                { Key.Right, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'C' } },
-                { Key.Left, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'D' } },
-                { Key.Home, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'1', (byte)'~' } },
-                { Key.Insert, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'2', (byte)'~' } },
-                { Key.Delete, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'3', (byte)'~' } },
-                { Key.End, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'4', (byte)'~' } },
-                { Key.PageUp, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'5', (byte)'~' } },
-                { Key.PageDown, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'6', (byte)'~' } },
+                { Key.Up, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'A' } },
+                { Key.Down, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'B' } },
+                { Key.Right, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'C' } },
+                { Key.Left, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'D' } },
+                { Key.Home, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'1', (byte)'~' } },
+                { Key.Insert, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'2', (byte)'~' } },
+                { Key.Delete, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'3', (byte)'~' } },
+                { Key.End, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'4', (byte)'~' } },
+                { Key.PageUp, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'5', (byte)'~' } },
+                { Key.PageDown, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'6', (byte)'~' } },
 
                 { Key.NumPad0, new [] { (byte)'0' } },
                 { Key.NumPad1, new [] { (byte)'1' } },
@@ -48,21 +48,25 @@ namespace Terminal.Vt100
                 { Key.NumPadDecimal, new [] { (byte)'.' } },
                 { Key.NumPadEnter, new [] { (byte)ControlByte.CarriageReturn } },
 
-                { Key.F1, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'P' } },
-                { Key.F2, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'Q' } },
-                { Key.F3, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'R' } },
-                { Key.F4, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)'O', (byte)'S' } },
-                { Key.F5, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'5', (byte)'~' } },
-                { Key.F6, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'7', (byte)'~' } },
-                { Key.F7, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'8', (byte)'~' } },
-                { Key.F8, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'1', (byte)'9', (byte)'~' } },
-                { Key.F9, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'2', (byte)'0', (byte)'~' } },
-                { Key.F10, new [] { (byte)ControlByte.Escape, (byte)ControlByte.Csi, (byte)ControlByte.Csi, (byte)'2', (byte)'1', (byte)'~' } },
+                { Key.F1, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'P' } },
+                { Key.F2, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'Q' } },
+                { Key.F3, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'R' } },
+                { Key.F4, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'S' } },
+                { Key.F5, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'1', (byte)'5', (byte)'~' } },
+                { Key.F6, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'1', (byte)'7', (byte)'~' } },
+                { Key.F7, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'1', (byte)'8', (byte)'~' } },
+                { Key.F8, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'1', (byte)'9', (byte)'~' } },
+                { Key.F9, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'2', (byte)'0', (byte)'~' } },
+                { Key.F10, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)ControlByte.ControlSequenceIntroducer, (byte)'2', (byte)'1', (byte)'~' } },
             };
         }
 
         public void Feed(Key key, ModifierKeys modifiers)
         {
+            if(IsModifierOnly(key))
+            {
+                return;
+            }
             if((modifiers & ModifierKeys.Control) != 0)
             {
                 HandleControlModifier(key);
@@ -93,6 +97,11 @@ namespace Terminal.Vt100
             {
                 dataCallback((byte)(key - Key.At));
             }
+        }
+
+        private static bool IsModifierOnly(Key key)
+        {
+            return key == Key.ControlLeft || key == Key.ControlRight || key == Key.AltLeft || key == Key.AltRight || key == Key.ShiftLeft || key == Key.ShiftRight;
         }
 
         private readonly Action<byte> dataCallback;

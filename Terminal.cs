@@ -6,15 +6,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Terminal.Misc;
-using Terminal.Rows;
+using TermSharp.Misc;
+using TermSharp.Rows;
 using Xwt;
 using Xwt.Drawing;
 
-namespace Terminal
+namespace TermSharp
 {
     public class Terminal : HBox
     {
@@ -23,10 +21,9 @@ namespace Terminal
             rows = new List<IRow>();
             heightMap = new double[0];
             layoutParameters = new LayoutParameters(Font, Colors.White, Colors.LightSlateGray);
-            defaultBackground = Colors.Black;
+            DefaultBackground = Colors.Black;
 
-            BackgroundColor = Colors.Black;
-            PrepareLayoutParameters();
+            layoutParameters.Font = Font.SystemMonospaceFont;
             canvas = new TerminalCanvas(this);
             cursor = new Cursor(this, canvas);
             PackStart(canvas, true, true);
@@ -62,7 +59,7 @@ namespace Terminal
         {
             rows.Clear();
             RebuildHeightMap(true);
-            RefreshInner(true); // it does not matter whether we actually were at the end
+            RefreshInner(false); // it does not matter whether we actually were at the end
         }
 
         public void Refresh()
@@ -270,12 +267,14 @@ namespace Terminal
             if(e.Button == PointerButton.Left)
             {
                 var position = e.Position;
+                lastMousePosition = position;
                 position.Y += scrollbar.Value;
                 currentScrollStart = position;
                 foreach(var row in rows)
                 {
                     row.ResetSelection();
                 }
+                RefreshSelection();
             }
             if(e.Button == PointerButton.Right)
             {
@@ -423,6 +422,10 @@ namespace Terminal
             {
                 var scrollStart = currentScrollStart.Value;
                 canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
+                if(canvas.SelectedArea.Width == 0 || canvas.SelectedArea.Height == 0)
+                {
+                    canvas.SelectedArea = default(Rectangle);
+                }
             }
             canvas.Redraw();
         }
@@ -434,7 +437,7 @@ namespace Terminal
                 await Task.Delay(TimeSpan.FromMilliseconds(40));
                 if(autoscrollStep != 0)
                 {
-                    if(Math.Abs(autoscrollStep) > scrollbar.PageSize/2)
+                    if(Math.Abs(autoscrollStep) > scrollbar.PageSize / 2)
                     {
                         autoscrollStep = (int)(Math.Sign(autoscrollStep) * scrollbar.PageSize / 2);
                     }
@@ -442,11 +445,6 @@ namespace Terminal
                 }
                 await autoscrollEnabled.Task;
             }
-        }
-
-        private void PrepareLayoutParameters()
-        {
-            layoutParameters.Font = Font.SystemMonospaceFont;
         }
 
         private bool RebuildHeightMap(bool continueEvenIfLongTask = true)
@@ -487,7 +485,7 @@ namespace Terminal
             var firstScreenRow = GetScreenRowIndex(0);
             var diff = firstScreenRow - oldFirstScreenRow;
             cursor.Position = cursor.Position.ShiftedByY(-diff);
-            
+
             return true;
         }
 
@@ -612,8 +610,6 @@ namespace Terminal
                     screenSelectedArea.Height = -screenSelectedArea.Height;
                 }
                 screenSelectedArea.Y -= FirstRowHeight;
-                
-                parent.layoutParameters.Width = Size.Width;
 
                 var heightSoFar = 0.0;
 
