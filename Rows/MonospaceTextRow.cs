@@ -247,20 +247,21 @@ namespace TermSharp.Rows
             StringBuilder builder;
             if(position > 0)
             {
-                if(lengthInTextElements < position)
+                if(lengthInTextElements <= position) // append at the end of the current string, possibly enlarging it
                 {
                     builder = new StringBuilder(content);
                     builder.Append(' ', position - lengthInTextElements).Append(what);
                 }
-                else
+                else // insert in the middle of the current string
                 {
                     builder = new StringBuilder(stringInfo.SubstringByTextElements(0, position)).Append(what);
                 }
             }
-            else
+            else // insert at the beginning of the current string
             {
                 builder = new StringBuilder(what);
             }
+            // append the rest of the current string
             if(lengthInTextElements > position + 1)
             {
                 builder.Append(stringInfo.SubstringByTextElements(position + 1));
