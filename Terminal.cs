@@ -451,6 +451,7 @@ namespace TermSharp
         {
             if(rows.Count == 0)
             {
+                heightMap = new double[0];
                 return true;
             }
 
