@@ -57,9 +57,10 @@ namespace TermSharp
 
         public new void Clear()
         {
+            Cursor.Position = new IntegerPosition();
             rows.Clear();
             RebuildHeightMap(true);
-            RefreshInner(false); // it does not matter whether we actually were at the end
+            AppendRow(new MonospaceTextRow(""));
         }
 
         public void Refresh()
