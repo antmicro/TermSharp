@@ -54,7 +54,7 @@ namespace TermSharp.Vt100
                 {
                     if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
                     {
-                        terminal.AppendRow(new MonospaceTextRow(string.Empty));
+                        terminal.AppendRow(new MonospaceTextRow(string.Empty), true);
                     }
                     terminal.Cursor.Position = terminal.Cursor.Position.WithX(0).ShiftedByY(1);
                 }
@@ -107,8 +107,8 @@ namespace TermSharp.Vt100
         public event Action BellReceived;
 
         private void InsertCharacterAtCursor(string textElement)
-        {
-            var textRow = terminal.GetScreenRow(terminal.Cursor.Position.Y) as MonospaceTextRow;
+         {
+            var textRow = terminal.GetScreenRow(terminal.Cursor.Position.Y, true) as MonospaceTextRow;
             if(textRow == null)
             {
                 throw new InvalidOperationException("MonospaceTextRow expected but other type found.");

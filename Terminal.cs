@@ -46,10 +46,14 @@ namespace TermSharp
             scrollbar.StepIncrement = Utilities.GetLineSizeFromLayoutParams(layoutParameters).Height;
         }
 
-        public void AppendRow(IRow row)
+        public void AppendRow(IRow row, bool treatRowAsNonDummy = false)
         {
             var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
             rows.Add(row);
+            if(treatRowAsNonDummy)
+            {
+                lastNonDummyRow = Math.Max(lastNonDummyRow, rows.Count);
+            }
             row.PrepareForDrawing(layoutParameters);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
             RefreshInner(weWereAtEnd);
@@ -102,9 +106,14 @@ namespace TermSharp
             return result;
         }
 
-        public IRow GetScreenRow(int screenPosition)
+        public IRow GetScreenRow(int screenPosition, bool treatRowAsNonDummy = false)
         {
-            return rows[GetScreenRowIndex(screenPosition)];
+            var position = GetScreenRowIndex(screenPosition);
+            if(treatRowAsNonDummy)
+            {
+                lastNonDummyRow = Math.Max(lastNonDummyRow, position);
+            }
+            return rows[position];
         }
 
         public IRow GetFirstScreenRow(out double hiddenHeight)
@@ -359,6 +368,11 @@ namespace TermSharp
 
             layoutParameters.Width = canvas.Size.Width;
 
+            var numberOfVisibleLines = (int)Math.Floor(ScreenSize / ((MonospaceTextRow)rows[0]).LineHeight);
+            if(heightMap.Length > lastNonDummyRow + 1 && lastNonDummyRow < numberOfVisibleLines)
+            {
+                rows.RemoveRange(lastNonDummyRow + 1, heightMap.Length - lastNonDummyRow - 2);
+            }
 #if DEBUG
             if(!RebuildHeightMap(false))
             {
@@ -565,6 +579,8 @@ namespace TermSharp
         private int autoscrollStep;
         private TaskCompletionSource<bool> autoscrollEnabled;
         private Color defaultBackground;
+
+        public int lastNonDummyRow;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
