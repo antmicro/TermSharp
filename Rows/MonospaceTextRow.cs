@@ -209,7 +209,7 @@ namespace TermSharp.Rows
                     specialForegrounds.Remove(i);
                 }
             }
-            content = builder.ToString();
+            content = builder.ToString().TrimEnd();
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
