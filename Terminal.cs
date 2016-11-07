@@ -355,6 +355,7 @@ namespace TermSharp
             double oldPosition;
             var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out oldPosition);
             var oldScrollbarValue = scrollbar.Value;
+            var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
 
             layoutParameters.Width = canvas.Size.Width;
 
@@ -373,12 +374,18 @@ namespace TermSharp
 #else
             RebuildHeightMap(true);
 #endif
-
             scrollbar.UpperValue = GetMaximumHeight();
 
-            // difference between old and new position of the first displayed row:
-            var diff = GetPositionOfTheRow(firstDisplayedRowIndex) - oldPosition;
-            SetScrollbarValue(oldScrollbarValue + diff);
+            if(!weWereAtEnd)
+            {
+                // difference between old and new position of the first displayed row:
+                var diff = GetPositionOfTheRow(firstDisplayedRowIndex) - oldPosition;
+                SetScrollbarValue(oldScrollbarValue + diff);
+            }
+            else
+            {
+                MoveScrollbarToEnd();
+            }
             canvas.Redraw();
         }
 
