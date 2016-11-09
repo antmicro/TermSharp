@@ -3,6 +3,7 @@
 //
 // Full license details are defined in the 'LICENSE' file.
 //
+#define REMOVE_DUMMY_ROWS
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -368,11 +369,13 @@ namespace TermSharp
 
             layoutParameters.Width = canvas.Size.Width;
 
+            #if REMOVE_DUMMY_ROWS
             var numberOfVisibleLines = (int)Math.Floor(ScreenSize / ((MonospaceTextRow)rows[0]).LineHeight);
             if(heightMap.Length > lastNonDummyRow + 1 && lastNonDummyRow < numberOfVisibleLines)
             {
                 rows.RemoveRange(lastNonDummyRow + 1, heightMap.Length - lastNonDummyRow - 2);
             }
+            #endif
 #if DEBUG
             if(!RebuildHeightMap(false))
             {
