@@ -175,7 +175,7 @@ namespace TermSharp.Rows
         {
             var builder = new StringBuilder();
             var stringInfo = new StringInfo(content);
-            from = Math.Max(0, Math.Min(from, stringInfo.LengthInTextElements - 1));
+            from = Math.Max(0, Math.Min(from, stringInfo.LengthInTextElements));
 
             if(from > 0)
             {
