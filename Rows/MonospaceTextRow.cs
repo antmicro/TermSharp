@@ -41,7 +41,7 @@ namespace TermSharp.Rows
 
             MaximalColumn = ((int)(lineSize.Width / charWidth)) - 1;
 
-            var charsOnLine = MaximalColumn + 1;
+            var charsOnLine = Math.Max(1, MaximalColumn + 1);
             var lengthInTextElementsAtLeastOne = lengthInTextElements == 0 ? 1 : lengthInTextElements; // because even empty line has height of one line
             lineCount = DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine);
             return lineSize.Height * lineCount;
@@ -51,7 +51,7 @@ namespace TermSharp.Rows
         {
             ctx.SetColor(defaultForeground);
             var newLinesAt = new List<int> { 0 }; // contains indices of line wraps (i.e. \n)
-            var charsOnLine = MaximalColumn + 1;
+            var charsOnLine = Math.Max(1, MaximalColumn + 1);
 
             var result = new StringBuilder();
             var enumerator = StringInfo.GetTextElementEnumerator(content);
@@ -148,8 +148,9 @@ namespace TermSharp.Rows
 
         public void DrawCursor(Context ctx, int offset, bool focused)
         {
-            var column = offset % (MaximalColumn + 1);
-            var row = offset / (MaximalColumn + 1);
+            var maxColumn = Math.Max(1, MaximalColumn + 1);
+            var column = offset % maxColumn;
+            var row = offset / maxColumn;
             ctx.SetColor(defaultForeground);
             ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
             if(focused)
