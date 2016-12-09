@@ -8,7 +8,6 @@ namespace TermSharp.Vt100
 {
     public interface IDecoderLogger
     {
-        void Log(string message);
         void Log(string format, params object[] args);
     }
 }

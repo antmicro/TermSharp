@@ -9,11 +9,6 @@ namespace TermSharp.Vt100
 {
     public class ConsoleDecoderLogger : IDecoderLogger
     {
-        public void Log(string message)
-        {
-            Console.WriteLine(message);
-        }
-
         public void Log(string format, params object[] args)
         {
             Console.WriteLine(format, args);
