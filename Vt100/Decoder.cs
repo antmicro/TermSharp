@@ -147,6 +147,7 @@ namespace TermSharp.Vt100
                 {
                     HandleNonCsiCode(c);
                     inAnsiCode = false;
+                    privateModeCode = false;
                     return;
                 }
                 csiCodeData = new StringBuilder();
@@ -156,6 +157,8 @@ namespace TermSharp.Vt100
             {
                 logger.Log("Escape character within ANSI code.");
                 inAnsiCode = false;
+                privateModeCode = false;
+                csiCodeData = null;
                 return;
             }
             if(char.IsLetter(c))
@@ -173,6 +176,9 @@ namespace TermSharp.Vt100
                 else
                 {
                     logger.Log(string.Format("Unimplemented ANSI code {0}.", c));
+                    inAnsiCode = false;
+                    csiCodeData = null;
+                    privateModeCode = false;
                 }
             }
             else
