@@ -156,7 +156,8 @@ namespace TermSharp.Rows
             if(focused)
             {
                 ctx.Fill();
-                cursorInRow = offset;
+                //We add the row number (0-based) to account for \n characters added in subrows.
+                cursorInRow = offset + row;
             }
             else
             {
