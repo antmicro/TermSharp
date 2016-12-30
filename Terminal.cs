@@ -17,8 +17,17 @@ namespace TermSharp
 {
     public class Terminal : HBox
     {
-        public Terminal()
+        public Terminal(Func<bool> focusProvider = null)
         {
+            if(focusProvider == null)
+            {
+                this.focusProvider = () => canvas.HasFocus;
+            } 
+            else
+            {
+                this.focusProvider = () => focusProvider() && canvas.HasFocus;
+            }
+
             rows = new List<IRow>();
             heightMap = new double[0];
             layoutParameters = new LayoutParameters(Font, Colors.White, Colors.LightSlateGray);
@@ -590,6 +599,7 @@ namespace TermSharp
         private readonly VScrollbar scrollbar;
         private readonly TerminalCanvas canvas;
         private readonly Cursor cursor;
+        private readonly Func<bool> focusProvider;
 
         private static readonly TimeSpan HeightMapRebuildTimeout = TimeSpan.FromMilliseconds(30);
         private const int HeightMapCheckTimeoutEveryNthRow = 1000;
@@ -684,9 +694,10 @@ namespace TermSharp
                     }
 
                     ctx.Save();
-                    if(parent.Cursor.Enabled && i == cursorRow && (parent.Cursor.BlinkState || !HasFocus))
+                    var hasFocus = parent.focusProvider();
+                    if(parent.Cursor.Enabled && i == cursorRow && (parent.Cursor.BlinkState || !hasFocus))
                     {
-                        parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X, HasFocus);
+                        parent.rows[i].DrawCursor(ctx, parent.Cursor.Position.X, hasFocus);
                     }
                     parent.rows[i].Draw(ctx, selectedAreaInRow, selectionDirection, parent.SelectionMode);
                     ctx.Restore();
