@@ -243,6 +243,7 @@ namespace TermSharp.Vt100
                 return (GraphicRendition)MemberwiseClone();
             }
 
+            // Codes based on https://en.wikipedia.org/wiki/ANSI_escape_code
             public void HandleSgr()
             {
                 for(var i = 0; i < parent.currentParams.Length; i++)
@@ -443,7 +444,10 @@ namespace TermSharp.Vt100
             {
                 { 0, x => x.Reset() },
                 { 1, x => x.Bright = true },
-                { 7, x => x.Negative = true }
+                { 7, x => x.Negative = true },
+                { 21, x => x.Bright = false },
+                { 39, x => x.Foreground = null },
+                { 49, x => x.Background = null }
             };
 
             private Color? foreground;

@@ -82,7 +82,7 @@ namespace TermSharp.Vt100
                         Feed("^");
                         Feed(((char)(c + 64)).ToString());
                     }
-                    else
+                    else if(c != 127) //intentionally do nothing for DEL character
                     {
                         logger.Log(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
                     }
