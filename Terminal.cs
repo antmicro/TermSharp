@@ -30,7 +30,7 @@ namespace TermSharp
 
             rows = new List<IRow>();
             heightMap = new double[0];
-            layoutParameters = new LayoutParameters(Font, Colors.White, Colors.LightSlateGray);
+            layoutParameters = new LayoutParameters(Font, DefaultGray, Colors.LightSlateGray);
             DefaultBackground = Colors.Black;
 
             layoutParameters.Font = Font.SystemMonospaceFont;
@@ -270,6 +270,8 @@ namespace TermSharp
                 canvas.KeyPressed -= value;
             }
         }
+
+        static internal Color DefaultGray = new Color(0.75, 0.75, 0.75);
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {

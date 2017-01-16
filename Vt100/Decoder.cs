@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using TermSharp.Misc;
 using TermSharp.Rows;
-using Xwt.Drawing;
 
 namespace TermSharp.Vt100
 {
@@ -21,6 +20,8 @@ namespace TermSharp.Vt100
             this.responseCallback = responseCallback;
             this.logger = logger;
             commands = new Dictionary<char, Action>();
+            graphicRendition = new GraphicRendition(this);
+            savedGraphicRendition = graphicRendition.Clone();
             InitializeCommands();
             cursor = new Cursor(this);
             CharReceivedBlinkDisabledRounds = 1;
@@ -98,10 +99,6 @@ namespace TermSharp.Vt100
             terminal.Redraw();
         }
 
-        public Color? CurrentForeground { get; set; }
-
-        public Color? CurrentBackground { get; set; }
-
         public int CharReceivedBlinkDisabledRounds { get; set; }
 
         public event Action BellReceived;
@@ -113,7 +110,7 @@ namespace TermSharp.Vt100
             {
                 throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
             }
-            if(textRow.InsertCharacterAt(terminal.Cursor.Position.X, textElement, CurrentForeground, CurrentBackground))
+            if(textRow.InsertCharacterAt(terminal.Cursor.Position.X, textElement, graphicRendition.EffectiveForeground, graphicRendition.EffectiveBackground))
             {
                 terminal.Refresh();
             }
@@ -220,8 +217,7 @@ namespace TermSharp.Vt100
         private void HandleTerminalReset()
         {
             terminal.Cursor.Enabled = true;
-            CurrentForeground = terminal.DefaultForeground;
-            CurrentBackground = terminal.DefaultBackground;
+            graphicRendition.Reset();
             var screenRows = terminal.ScreenRowCount;
             for(var i = 0; i < screenRows; i++)
             {
@@ -231,9 +227,9 @@ namespace TermSharp.Vt100
         }
 
         private bool ignoreNextChar;
+        private GraphicRendition graphicRendition;
+        private GraphicRendition savedGraphicRendition;
         private IntegerPosition savedCursorPosition;
-        private Color? savedForeground;
-        private Color? savedBackground;
         private int?[] currentParams;
         private bool inAnsiCode;
         private bool privateModeCode;

@@ -71,79 +71,6 @@ namespace TermSharp.Vt100
             cursor.Position = new IntegerPosition(column, row);
         }
 
-        private void SelectGraphicRendition()
-        {
-            var onlyZeros = true;
-
-            var bright = false;
-            var foregroundColorIndex = -1;
-            var backgroundColorIndex = -1;
-            var swapColors = false;
-            for(var i = 0; i < currentParams.Length; i++)
-            {
-                var parameter = currentParams[i];
-                if(!parameter.HasValue)
-                {
-                    continue;
-                }
-                var value = parameter.Value;
-                if(value != 0)
-                {
-                    onlyZeros = false;
-                }
-                if(value == 1)
-                {
-                    bright = true;
-                }
-                else if(value >= 30 && value <= 37)
-                {
-                    foregroundColorIndex = value - 30;
-                }
-                else if(value >= 40 && value <= 47)
-                {
-                    backgroundColorIndex = value - 40;
-                }
-                else if(value == 7)
-                {
-                    swapColors = true;
-                }
-                else if(value == 38)
-                {
-                    i++;
-                    CurrentForeground = GetExtendedColor(ref i);
-                }
-                else if(value == 48)
-                {
-                    i++;
-                    CurrentBackground = GetExtendedColor(ref i);
-                }
-                else if(value != 0)
-                {
-                    logger.Log(string.Format("Unimplemented SGR code {0}.", value));
-                }
-            }
-            if(onlyZeros)
-            {
-                CurrentForeground = null;
-                CurrentBackground = null;
-                return;
-            }
-            if(foregroundColorIndex != -1)
-            {
-                CurrentForeground = GetConsolePaletteColor(!bright, foregroundColorIndex);
-            }
-            if(backgroundColorIndex != -1)
-            {
-                CurrentBackground = GetConsolePaletteColor(true, backgroundColorIndex);
-            }
-            if(swapColors)
-            {
-                var oldBackground = CurrentBackground ?? terminal.DefaultBackground;
-                CurrentBackground = CurrentForeground ?? terminal.DefaultForeground;
-                CurrentForeground = oldBackground;
-            }
-        }
-
         private void EraseDisplay()
         {
             var type = GetParamOrDefault(0, 0);
@@ -167,7 +94,7 @@ namespace TermSharp.Vt100
                 logger.Log("Unimplemented erase display mode.");
                 return;
             }
-            terminal.EraseScreen(clearBegin, clearEnd, CurrentBackground);
+            terminal.EraseScreen(clearBegin, clearEnd, graphicRendition.Background);
         }
 
         private void EraseInLine()
@@ -181,13 +108,13 @@ namespace TermSharp.Vt100
             switch(type)
             {
             case 0:
-                currentRow.Erase(terminal.Cursor.Position.X, screenRowEnd, CurrentBackground);
+                currentRow.Erase(terminal.Cursor.Position.X, screenRowEnd, graphicRendition.Background);
                 break;
             case 1:
-                currentRow.Erase(screenRowBegin, terminal.Cursor.Position.X, CurrentBackground);
+                currentRow.Erase(screenRowBegin, terminal.Cursor.Position.X, graphicRendition.Background);
                 break;
             case 2:
-                currentRow.Erase(screenRowBegin, screenRowEnd, CurrentBackground);
+                currentRow.Erase(screenRowBegin, screenRowEnd, graphicRendition.Background);
                 break;
             default:
                 logger.Log("Uimplemented erase line mode.");
@@ -209,16 +136,14 @@ namespace TermSharp.Vt100
 
         private void SaveCursorPosition()
         {
+            savedGraphicRendition = graphicRendition.Clone();
             savedCursorPosition = cursor.Position;
-            savedForeground = CurrentForeground;
-            savedBackground = CurrentBackground;
         }
 
         private void RestoreCursorPosition()
         {
+            graphicRendition = savedGraphicRendition;
             cursor.Position = savedCursorPosition;
-            CurrentForeground = savedForeground;
-            CurrentBackground = savedBackground;
         }
 
         private void DeviceAttributes()
@@ -272,61 +197,6 @@ namespace TermSharp.Vt100
             }
         }
 
-        private Color GetConsolePaletteColor(bool dark, int number)
-        {
-            switch(number)
-            {
-            case 0:
-                return dark ? Colors.Black : Colors.DarkGray;
-            case 1:
-                return dark ? Colors.DarkRed : Colors.Red;
-            case 2:
-                return dark ? Colors.DarkGreen : Colors.Green;
-            case 3:
-                return dark ? Colors.Brown : Colors.Yellow;
-            case 4:
-                return dark ? Colors.DarkBlue : Colors.Blue;
-            case 5:
-                return dark ? Colors.DarkMagenta : Colors.Magenta;
-            case 6:
-                return dark ? Colors.DarkCyan : Colors.Cyan;
-            case 7:
-                return dark ? Colors.LightGray : Colors.White;
-            }
-            logger.Log("Unexpected palette color number.");
-            return Colors.Black;
-        }
-
-        private Color GetExtendedColor(ref int baseParameterIndex)
-        {
-            switch(GetParamOrDefault(baseParameterIndex, 0))
-            {
-            case 2:
-                baseParameterIndex += 3;
-                return new Color(GetParamOrDefault(baseParameterIndex - 2, 0)/255.0, GetParamOrDefault(baseParameterIndex - 1, 0)/255.0, GetParamOrDefault(baseParameterIndex, 0)/255.0);
-            case 5:
-                baseParameterIndex++;
-                var index = GetParamOrDefault(baseParameterIndex, 0);
-                if(index >= 0 && index <= 15)
-                {
-                    return GetConsolePaletteColor(index > 7, index % 8);
-                }
-                else if(index < 0xE7)
-                {
-                    index -= 16;
-                    return new Color(((index / 36) % 6) / 5.0, ((index / 6) % 6) / 5.0, (index % 6) / 5.0);
-                }
-                else
-                {
-                    index -= 0xE7;
-                    return new Color(index / 24.0, index / 24.0, index / 24.0);
-                }
-            default:
-                logger.Log("Unimplemented extended color mode.");
-                return Colors.Black;
-            }
-        }
-
         private void InitializeCommands()
         {
             commands.Add('A', CursorUp);
@@ -341,7 +211,7 @@ namespace TermSharp.Vt100
             commands.Add('J', EraseDisplay);
             commands.Add('K', EraseInLine);
 
-            commands.Add('m', SelectGraphicRendition);
+            commands.Add('m', () => graphicRendition.HandleSgr());
             commands.Add('n', DeviceStatusReport);
             commands.Add('s', SaveCursorPosition);
             commands.Add('u', RestoreCursorPosition);
@@ -352,6 +222,237 @@ namespace TermSharp.Vt100
         }
 
         private readonly Dictionary<char, Action> commands;
+
+        private sealed class GraphicRendition
+        {
+            public GraphicRendition(Decoder parent)
+            {
+                this.parent = parent;
+            }
+
+            public void Reset()
+            {
+                Foreground = null;
+                Background = null;
+                Negative = false;
+                Bright = false;
+            }
+
+            public GraphicRendition Clone()
+            {
+                return (GraphicRendition)MemberwiseClone();
+            }
+
+            public void HandleSgr()
+            {
+                for(var i = 0; i < parent.currentParams.Length; i++)
+                {
+                    var parameter = parent.currentParams[i];
+                    if(!parameter.HasValue)
+                    {
+                        continue;
+                    }
+                    var value = parameter.Value;
+                    Action<GraphicRendition> handler;
+                    if(SgrHandlers.TryGetValue(value, out handler))
+                    {
+                        handler(this);
+                    }
+                    else if(value >= 30 && value <= 37)
+                    {
+                        Foreground = GetConsolePaletteColor(value - 30);
+                    }
+                    else if(value >= 40 && value <= 47)
+                    {
+                        Background = GetConsolePaletteColor(value - 40);
+                    }
+                    else if(value == 38)
+                    {
+                        i++;
+                        Foreground = GetExtendedColor(ref i);
+                    }
+                    else if(value == 48)
+                    {
+                        i++;
+                        Background = GetExtendedColor(ref i);
+                    }
+                    else
+                    {
+                        parent.logger.Log(string.Format("Unimplemented SGR code {0}.", value));
+                    }
+                }
+            }
+
+            public Color? Foreground
+            {
+                get
+                {
+                    return foreground;
+                }
+                set
+                {
+                    foreground = value;
+                    Refresh();
+                }
+            }
+
+            public Color? Background
+            {
+                get
+                {
+                    return background;
+                }
+                set
+                {
+                    background = value;
+                    Refresh();
+                }
+            }
+
+            public bool Bright
+            {
+                get
+                {
+                    return bright;
+                }
+                set
+                {
+                    bright = value;
+                    Refresh();
+                }
+            }
+
+            public bool Negative
+            {
+                get
+                {
+                    return negative;
+                }
+                set
+                {
+                    negative = value;
+                    Refresh();
+                }
+            }
+
+            public Color? EffectiveForeground { get; private set; }
+
+            public Color? EffectiveBackground { get; private set; }
+
+            private static Color Brighten(Color value)
+            {
+                Color result;
+                if(!DefinedBrightColors.TryGetValue(value, out result))
+                {
+                    result = value.WithIncreasedLight(0.3);
+                }
+                return result;
+            }
+
+            private Color GetConsolePaletteColor(int number)
+            {
+                switch(number)
+                {
+                case 0:
+                    return Colors.Black;
+                case 1:
+                    return Colors.DarkRed;
+                case 2:
+                    return Colors.DarkGreen;
+                case 3:
+                    return Colors.Brown;
+                case 4:
+                    return Colors.DarkBlue;
+                case 5:
+                    return Colors.DarkMagenta;
+                case 6:
+                    return Colors.DarkCyan;
+                case 7:
+                    return Terminal.DefaultGray;
+                }
+                parent.logger.Log("Unexpected palette color number.");
+                return Colors.Black;
+            }
+
+            private Color GetExtendedColor(ref int baseParameterIndex)
+            {
+                switch(parent.GetParamOrDefault(baseParameterIndex, 0))
+                {
+                case 2:
+                    baseParameterIndex += 3;
+                    return new Color(parent.GetParamOrDefault(baseParameterIndex - 2, 0) / 255.0, parent.GetParamOrDefault(baseParameterIndex - 1, 0) / 255.0, parent.GetParamOrDefault(baseParameterIndex, 0) / 255.0);
+                case 5:
+                    baseParameterIndex++;
+                    var index = parent.GetParamOrDefault(baseParameterIndex, 0);
+                    if(index >= 0 && index <= 15)
+                    {
+                        var color = GetConsolePaletteColor(index % 8);
+                        if(index > 7)
+                        {
+                            color = Brighten(color);
+                        }
+                        return color;
+                    }
+                    else if(index < 0xE7)
+                    {
+                        index -= 16;
+                        return new Color(((index / 36) % 6) / 5.0, ((index / 6) % 6) / 5.0, (index % 6) / 5.0);
+                    }
+                    else
+                    {
+                        index -= 0xE7;
+                        return new Color(index / 24.0, index / 24.0, index / 24.0);
+                    }
+                default:
+                    parent.logger.Log("Unimplemented extended color mode.");
+                    return Colors.Black;
+                }
+            }
+
+            private void Refresh()
+            {
+                var currentForeground = foreground ?? parent.terminal.DefaultForeground;
+                var currentBackground = background ?? parent.terminal.DefaultBackground;
+                if(Bright)
+                {
+                    currentForeground = Brighten(currentForeground);
+                }
+                if(Negative)
+                {
+                    var temporary = currentForeground;
+                    currentForeground = currentBackground;
+                    currentBackground = temporary;
+                }
+                EffectiveForeground = currentForeground == parent.terminal.DefaultForeground ? default(Color?) : currentForeground;
+                EffectiveBackground = currentBackground == parent.terminal.DefaultBackground ? default(Color?) : currentBackground;
+            }
+
+            private static readonly Dictionary<Color, Color> DefinedBrightColors = new Dictionary<Color, Color>
+            {
+                { Colors.Black, Colors.DarkGray },
+                { Colors.DarkRed, Colors.Red },
+                { Colors.DarkGreen, Colors.Green },
+                { Colors.Brown, Colors.Yellow },
+                { Colors.DarkBlue, Colors.Blue },
+                { Colors.DarkMagenta, Colors.Magenta },
+                { Colors.DarkCyan, Colors.Cyan },
+                { Terminal.DefaultGray, Colors.White }
+            };
+
+            private static readonly Dictionary<int, Action<GraphicRendition>> SgrHandlers = new Dictionary<int, Action<GraphicRendition>>
+            {
+                { 0, x => x.Reset() },
+                { 1, x => x.Bright = true },
+                { 7, x => x.Negative = true }
+            };
+
+            private Color? foreground;
+            private Color? background;
+            private bool bright;
+            private bool negative;
+
+            private readonly Decoder parent;
+        }
     }
 }
 
