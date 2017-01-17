@@ -142,7 +142,7 @@ namespace TermSharp.Vt100
 
         private void RestoreCursorPosition()
         {
-            graphicRendition = savedGraphicRendition;
+            graphicRendition = savedGraphicRendition.Clone();
             cursor.Position = savedCursorPosition;
         }
 
@@ -401,8 +401,9 @@ namespace TermSharp.Vt100
                     }
                     else
                     {
-                        index -= 0xE7;
-                        return new Color(index / 24.0, index / 24.0, index / 24.0);
+                        // colors taken from https://jonasjacek.github.io/colors/
+                        var intensity = 0x8 + (index - 0xE8) * 0xA;
+                        return new Color(intensity, intensity, intensity);
                     }
                 default:
                     parent.logger.Log("Unimplemented extended color mode.");
@@ -446,6 +447,7 @@ namespace TermSharp.Vt100
                 { 1, x => x.Bright = true },
                 { 7, x => x.Negative = true },
                 { 21, x => x.Bright = false },
+                { 28, x => x.Negative = false },
                 { 39, x => x.Foreground = null },
                 { 49, x => x.Background = null }
             };
