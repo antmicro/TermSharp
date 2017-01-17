@@ -245,6 +245,54 @@ namespace TermSharp
             }
         }
 
+        public double InnerMarginLeft
+        {
+            get
+            {
+                return canvas.MarginLeft;
+            }
+            set
+            {
+                canvas.MarginLeft = value;
+            }
+        }
+
+        public double InnerMarginRight
+        {
+            get
+            {
+                return canvas.MarginRight;
+            }
+            set
+            {
+                canvas.MarginRight = value;
+            }
+        }
+
+        public double InnerMarginBottom
+        {
+            get
+            {
+                return canvas.MarginBottom;
+            }
+            set
+            {
+                canvas.MarginBottom = value;
+            }
+        }
+
+        public double InnerMarginTop
+        {
+            get
+            {
+                return canvas.MarginTop;
+            }
+            set
+            {
+                canvas.MarginTop = value;
+            }
+        }
+
         public WidgetSpacing InnerMargin
         {
             get
