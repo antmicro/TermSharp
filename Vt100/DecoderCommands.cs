@@ -340,16 +340,6 @@ namespace TermSharp.Vt100
 
             public Color? EffectiveBackground { get; private set; }
 
-            private static Color Brighten(Color value)
-            {
-                Color result;
-                if(!DefinedBrightColors.TryGetValue(value, out result))
-                {
-                    result = value.WithIncreasedLight(0.3);
-                }
-                return result;
-            }
-
             private Color GetConsolePaletteColor(int number)
             {
                 switch(number)
@@ -397,13 +387,16 @@ namespace TermSharp.Vt100
                     else if(index < 0xE7)
                     {
                         index -= 16;
-                        return new Color(((index / 36) % 6) / 5.0, ((index / 6) % 6) / 5.0, (index % 6) / 5.0);
+                        var r = ToColorTable((index / 36) % 6);
+                        var g = ToColorTable((index / 6) % 6);
+                        var b = ToColorTable(index % 6);
+                        return new Color(r / 255.0, g / 255.0, b / 255.0);
                     }
                     else
                     {
                         // colors taken from https://jonasjacek.github.io/colors/
                         var intensity = 0x8 + (index - 0xE8) * 0xA;
-                        return new Color(intensity, intensity, intensity);
+                        return new Color(intensity / 255.0, intensity / 255.0, intensity / 255.0);
                     }
                 default:
                     parent.logger.Log("Unimplemented extended color mode.");
@@ -429,6 +422,32 @@ namespace TermSharp.Vt100
                 EffectiveBackground = currentBackground == parent.terminal.DefaultBackground ? default(Color?) : currentBackground;
             }
 
+            private static Color Brighten(Color value)
+            {
+                Color result;
+                if(!DefinedBrightColors.TryGetValue(value, out result))
+                {
+                    result = value.WithIncreasedLight(0.3);
+                }
+                return result;
+            }
+
+            private static int ToColorTable(int index)
+            {
+                if(index > 0)
+                {
+                    index = 0x5f + (index - 1) * 0x28;
+                }
+                return index;
+            }
+
+            private Color? foreground;
+            private Color? background;
+            private bool bright;
+            private bool negative;
+
+            private readonly Decoder parent;
+
             private static readonly Dictionary<Color, Color> DefinedBrightColors = new Dictionary<Color, Color>
             {
                 { Colors.Black, Colors.DarkGray },
@@ -451,14 +470,6 @@ namespace TermSharp.Vt100
                 { 39, x => x.Foreground = null },
                 { 49, x => x.Background = null }
             };
-
-            private Color? foreground;
-            private Color? background;
-            private bool bright;
-            private bool negative;
-
-            private readonly Decoder parent;
         }
     }
 }
-
