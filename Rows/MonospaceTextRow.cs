@@ -25,7 +25,7 @@ namespace TermSharp.Rows
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
-        public double PrepareForDrawing(ILayoutParameters parameters)
+        public virtual double PrepareForDrawing(ILayoutParameters parameters)
         {
             cursorInRow = null;
             defaultForeground = parameters.DefaultForeground;
@@ -47,7 +47,7 @@ namespace TermSharp.Rows
             return lineSize.Height * lineCount;
         }
 
-        public void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
+        public virtual void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
         {
             ctx.SetColor(defaultForeground);
             var newLinesAt = new List<int> { 0 }; // contains indices of line wraps (i.e. \n)
@@ -146,7 +146,7 @@ namespace TermSharp.Rows
             selectedContent = null;
         }
 
-        public void DrawCursor(Context ctx, int offset, bool focused)
+        public virtual void DrawCursor(Context ctx, int offset, bool focused)
         {
             var maxColumn = Math.Max(1, MaximalColumn + 1);
             var column = offset % maxColumn;
@@ -279,7 +279,7 @@ namespace TermSharp.Rows
             return result;
         }
 
-        public int SublineCount
+        public virtual int SublineCount
         {
             get
             {
@@ -299,7 +299,7 @@ namespace TermSharp.Rows
         {
             get
             {
-                return MaximalColumn * SublineCount;
+                return MaximalColumn * lineCount;
             }
         }
 
