@@ -52,7 +52,6 @@ namespace TermSharp
             autoscrollEnabled = new TaskCompletionSource<bool>();
             HandleAutoscrollAsync();
             canvas.CanGetFocus = true;
-            AppendRow(new MonospaceTextRow(""));
             scrollbar.StepIncrement = Utilities.GetLineSizeFromLayoutParams(layoutParameters).Height;
         }
 
@@ -74,7 +73,6 @@ namespace TermSharp
             Cursor.Position = new IntegerPosition();
             rows.Clear();
             RebuildHeightMap(true);
-            AppendRow(new MonospaceTextRow(""));
         }
 
         public void Refresh()
