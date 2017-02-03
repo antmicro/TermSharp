@@ -53,15 +53,17 @@ namespace TermSharp.Vt100
                 }
                 else if(ControlByte.LineFeed == (ControlByte)c)
                 {
-                    if(terminal.Cursor.Position.Y == terminal.Cursor.MaximalPosition.Y)
+                    var oldY = cursor.Position.Y;
+                    cursor.Position = cursor.Position.ShiftedByY(1);
+                    if(oldY == cursor.Position.Y)
                     {
                         terminal.AppendRow(new MonospaceTextRow(string.Empty), true);
+                        cursor.Position = cursor.Position.ShiftedByY(1);
                     }
-                    terminal.Cursor.Position = terminal.Cursor.Position.WithX(0).ShiftedByY(1);
                 }
                 else if(ControlByte.CarriageReturn == (ControlByte)c)
                 {
-                    terminal.Cursor.Position = terminal.Cursor.Position.WithX(0);
+                    cursor.Position = cursor.Position.WithX(0);
                 }
                 else if(ControlByte.Bell == (ControlByte)c)
                 {
