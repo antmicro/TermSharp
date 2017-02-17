@@ -43,7 +43,7 @@ namespace TermSharp.Rows
 
             var charsOnLine = Math.Max(1, MaximalColumn + 1);
             var lengthInTextElementsAtLeastOne = lengthInTextElements == 0 ? 1 : lengthInTextElements; // because even empty line has height of one line
-            lineCount = DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine);
+            lineCount = Math.Max(minimalSublineCount, DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine));
             return lineSize.Height * lineCount;
         }
 
@@ -175,6 +175,10 @@ namespace TermSharp.Rows
 
         public void Erase(int from, int to, Color? background = null)
         {
+            // due to TrimEnd() (near the end of this method) the number of sublines can go down - but this in fact
+            // cannot happend during erase operation, so we make sure that the minimal subline count is the current count
+            minimalSublineCount = SublineCount;
+
             var builder = new StringBuilder();
             var stringInfo = new StringInfo(content);
             from = Math.Max(0, Math.Min(from, stringInfo.LengthInTextElements));
@@ -211,7 +215,7 @@ namespace TermSharp.Rows
                     specialForegrounds.Remove(i);
                 }
             }
-            content = builder.ToString();
+            content = builder.ToString().TrimEnd();
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
@@ -349,6 +353,7 @@ namespace TermSharp.Rows
         private Color selectionColor;
         private int lengthInTextElements;
         private int? cursorInRow;
+        private int minimalSublineCount;
         private Dictionary<int, Color> specialForegrounds;
         private Dictionary<int, Color> specialBackgrounds;
 
