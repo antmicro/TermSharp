@@ -176,7 +176,7 @@ namespace TermSharp.Rows
         public void Erase(int from, int to, Color? background = null)
         {
             // due to TrimEnd() (near the end of this method) the number of sublines can go down - but this in fact
-            // cannot happend during erase operation, so we make sure that the minimal subline count is the current count
+            // cannot happen during erase operation, so we make sure that the minimal subline count is the current count
             minimalSublineCount = SublineCount;
 
             var builder = new StringBuilder();
