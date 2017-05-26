@@ -640,7 +640,7 @@ namespace TermSharp
         private TaskCompletionSource<bool> autoscrollEnabled;
         private Color defaultBackground;
 
-        public int lastNonDummyRow;
+        private int lastNonDummyRow;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
