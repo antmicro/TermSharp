@@ -317,6 +317,8 @@ namespace TermSharp
             }
         }
 
+        public event Action Initialized;
+
         static internal Color DefaultGray = new Color(0.75, 0.75, 0.75);
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
@@ -461,6 +463,20 @@ namespace TermSharp
                 MoveScrollbarToEnd();
             }
             canvas.Redraw();
+            if(!isInitialized)
+            {
+                isInitialized = true;
+                CallInitializedEvent();
+            }
+        }
+
+        private void CallInitializedEvent()
+        {
+            var initialized = Initialized;
+            if(initialized != null)
+            {
+                initialized();
+            }
         }
 
         private void RefreshInner(bool weWereAtEnd)
@@ -639,8 +655,8 @@ namespace TermSharp
         private int autoscrollStep;
         private TaskCompletionSource<bool> autoscrollEnabled;
         private Color defaultBackground;
-
-        public int lastNonDummyRow;
+        private int lastNonDummyRow;
+        private bool isInitialized;
 
         private readonly List<IRow> rows;
         private readonly LayoutParameters layoutParameters;
