@@ -219,7 +219,7 @@ namespace TermSharp.Rows
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
-        public bool InsertCharacterAt(int position, string what, Color? foreground = null, Color? background = null)
+        public bool PutCharacterAt(int position, string what, Color? foreground = null, Color? background = null)
         {
             Debug.Assert(new StringInfo(what).LengthInTextElements == 1);
 
@@ -275,7 +275,7 @@ namespace TermSharp.Rows
 
             content = builder.ToString();
             var oldLengthInTextElements = lengthInTextElements;
-            lengthInTextElements = Math.Max(position + 1, lengthInTextElements);
+            lengthInTextElements = new StringInfo(content).LengthInTextElements;
 
             var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
             var result = DivisionWithCeiling(oldLengthInTextElements == 0 ? 1 : oldLengthInTextElements, charsOnLine)

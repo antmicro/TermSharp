@@ -112,7 +112,7 @@ namespace TermSharp.Vt100
             {
                 throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
             }
-            if(textRow.InsertCharacterAt(terminal.Cursor.Position.X, textElement, graphicRendition.EffectiveForeground, graphicRendition.EffectiveBackground))
+            if(textRow.PutCharacterAt(terminal.Cursor.Position.X, textElement, graphicRendition.EffectiveForeground, graphicRendition.EffectiveBackground))
             {
                 terminal.Refresh();
             }
