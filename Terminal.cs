@@ -155,8 +155,17 @@ namespace TermSharp
             }
             set
             {
+                bool fontSizeDecreased = layoutParameters.Font.Size > value.Size;
                 layoutParameters.Font = value;
                 Redraw();
+                if(rows.Count > 0)
+                {
+                    if(fontSizeDecreased)
+                    {
+                        RebuildHeightMap();
+                    }
+                    OnCanvasBoundsChanged(null, null);
+                }
             }
         }
 
@@ -779,4 +788,3 @@ namespace TermSharp
         }
     }
 }
-
