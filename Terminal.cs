@@ -121,7 +121,7 @@ namespace TermSharp
             {
                 lastNonDummyRow = Math.Max(lastNonDummyRow, position);
             }
-            return rows[position];
+            return rows[Math.Min(position, rows.Count - 1)];
         }
 
         public IRow GetFirstScreenRow(out double hiddenHeight)
