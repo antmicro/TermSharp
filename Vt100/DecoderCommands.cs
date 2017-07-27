@@ -117,7 +117,7 @@ namespace TermSharp.Vt100
                 currentRow.Erase(screenRowBegin, screenRowEnd, graphicRendition.Background);
                 break;
             default:
-                logger.Log("Uimplemented erase line mode.");
+                logger.Log("Unimplemented erase line mode.");
                 break;
             }
         }
@@ -126,6 +126,7 @@ namespace TermSharp.Vt100
         {
             if(GetParamOrDefault(0, 0) != 6)
             {
+                logger.Log(string.Format("Unsupported device status report with params {0}.", ParamsToString()));
                 return;
             }
             var response = new List<byte>();
@@ -150,6 +151,7 @@ namespace TermSharp.Vt100
         {
             if(privateModeCode || GetParamOrDefault(0, 0) != 0)
             {
+                logger.Log(string.Format("Unsupported device attributes query with params {0}.", ParamsToString()));
                 return;
             }
             SendResponse(new[] { (byte)ControlByte.LineFeed, (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer }.Union(Encoding.ASCII.GetBytes("?1;2c")));
