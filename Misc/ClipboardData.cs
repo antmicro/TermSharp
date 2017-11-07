@@ -29,7 +29,7 @@ namespace TermSharp.Misc
                 {
                     return string.Empty;
                 }
-                return string.Join(Environment.NewLine, rows);
+                return string.Join(Environment.NewLine, rows.Select(x => x.TrimEnd('\n').TrimEnd('\r')));
             }
         }
 
