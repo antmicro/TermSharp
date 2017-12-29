@@ -85,7 +85,7 @@ namespace TermSharp.Rows
                     {
                         for(var j = firstColumn; j <= lastColumn; j++)
                         {
-                            foregroundColors[(charsOnLine + 1) * i + j] = GetSelectionForegroundColor(i);
+                            foregroundColors[(charsOnLine + 1) * i + j] = GetSelectionForegroundColor(i, charsOnLine);
                             backgroundColors[(charsOnLine + 1) * i + j] = selectionColor;
                         }
                     }
@@ -112,7 +112,7 @@ namespace TermSharp.Rows
 
                     for(var i = firstIndex; i <= lastIndex; i++)
                     {
-                        foregroundColors[i] = GetSelectionForegroundColor(i);
+                        foregroundColors[i] = GetSelectionForegroundColor(i, charsOnLine);
                         backgroundColors[i] = selectionColor;
                     }
                     selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(firstIndex, lastIndex - firstIndex + 1);
@@ -337,8 +337,10 @@ namespace TermSharp.Rows
             return (dividend + divisor - 1) / divisor;
         }
 
-        private Color GetSelectionForegroundColor(int index)
+        private Color GetSelectionForegroundColor(int index, int charsOnLine)
         {
+            // the index may be shifted by new line characters in wrapped lines, so we subtract the amount of subrows.
+            index -= index / charsOnLine;
             return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : Colors.Black;
         }
 
