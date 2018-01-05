@@ -77,8 +77,7 @@ namespace TermSharp.Rows
                 var firstSubrow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor(selectedArea.Y / lineSize.Height));
                 var lastSubrow = (int)Math.Min(newLinesAt.Count - 1, Math.Floor((selectedArea.Y + selectedArea.Height) / lineSize.Height));
                 var firstColumn = (int)Math.Round(selectedArea.X / charWidth);
-                var lastColumn = (int)Math.Round((selectedArea.X + selectedArea.Width) / charWidth);
-
+                var lastColumn = (int)Math.Floor((selectedArea.X + selectedArea.Width) / charWidth);
                 if(selectionMode == SelectionMode.Block)
                 {
                     for(var i = firstSubrow; i <= lastSubrow; i++)
