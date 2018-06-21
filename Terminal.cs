@@ -66,6 +66,7 @@ namespace TermSharp
             row.PrepareForDrawing(layoutParameters);
             AddToHeightMap(row.PrepareForDrawing(layoutParameters));
             RefreshInner(weWereAtEnd);
+            ScrollbarValueChanged();
         }
 
         public new void Clear()
@@ -332,6 +333,13 @@ namespace TermSharp
 
         private void OnScrollbarValueChanged(object sender, EventArgs e)
         {
+            ScrollbarValueChanged();
+        }
+
+        private void ScrollbarValueChanged()
+        {
+            // Usually the event `OnScrollbarValueChanged` fires automatically, but it does not work on WPF.
+            // That's why we call it explicitly until the event handling is fixed.
             double rowOffset;
             canvas.FirstRowToDisplay = FindRowIndexAtPosition(scrollbar.Value, out rowOffset);
             canvas.FirstRowHeight = rowOffset;
@@ -420,6 +428,7 @@ namespace TermSharp
                 break;
             }
             SetScrollbarValue(scrollbar.Value + scrollbar.StepIncrement * modifier);
+            ScrollbarValueChanged();
         }
 
 #if DEBUG
