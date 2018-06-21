@@ -47,6 +47,8 @@ namespace TermSharp.Vt100
                 { Key.NumPadDivide, new [] { (byte)'/' } },
                 { Key.NumPadDecimal, new [] { (byte)'.' } },
                 { Key.NumPadEnter, new [] { (byte)ControlByte.CarriageReturn } },
+                { Key.Caret, new [] { (byte)'^' } },
+                { Key.Equal, new [] { (byte)'=' } },
 
                 { Key.F1, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'P' } },
                 { Key.F2, new [] { (byte)ControlByte.Escape, (byte)ControlByte.ControlSequenceIntroducer, (byte)'O', (byte)'Q' } },
