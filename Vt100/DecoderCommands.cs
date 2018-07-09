@@ -89,6 +89,7 @@ namespace TermSharp.Vt100
             case 2:
                 clearBegin = new IntegerPosition();
                 clearEnd = terminal.Cursor.MaximalPosition;
+                cursor.Position = new IntegerPosition(0, 0);
                 break;
             default:
                 logger.Log("Unimplemented erase display mode.");
