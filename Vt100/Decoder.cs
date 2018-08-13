@@ -166,8 +166,30 @@ namespace TermSharp.Vt100
                 {
                     // let's extract parameters
                     var splitted = csiCodeData.ToString().Split(';');
-                    currentParams = splitted.Select(x => string.IsNullOrEmpty(x) ? (int?)null : int.Parse(x)).ToArray();
-                    commands[c]();
+                    var parsed = new List<int?>();
+                    foreach(var s in splitted)
+                    {
+                        if(string.IsNullOrEmpty(s))
+                        {
+                            parsed.Add(null);
+                        }
+                        else if(int.TryParse(s, out var i))
+                        {
+                            parsed.Add(i);
+                        }
+                        else
+                        {
+                            logger.Log($"Broken ANSI code data for command '{c}': '{csiCodeData}'");
+                            parsed = null;
+                            break;
+                        }
+                    }
+                    // parsed is set to null when broken ANSI code is detected
+                    if(parsed != null)
+                    {
+                        currentParams = parsed.ToArray();
+                        commands[c]();
+                    }
                     inAnsiCode = false;
                     privateModeCode = false;
                     csiCodeData = null;
