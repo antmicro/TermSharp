@@ -38,9 +38,10 @@ namespace TermSharp.Rows
                 return 0;
             }
 
-            MaximalColumn = ((int)(lineSize.Width / charWidth)) - 1;
+            // Math.Max used to prevent division by zero errors on windows narrower than one character
+            MaximalColumn = Math.Max(((int)(lineSize.Width / charWidth)) - 1, 0);
 
-            var charsOnLine = Math.Max(1, MaximalColumn + 1);
+            var charsOnLine = MaximalColumn + 1;
             var lengthInTextElementsAtLeastOne = lengthInTextElements == 0 ? 1 : lengthInTextElements; // because even empty line has height of one line
             lineCount = Math.Max(minimalSublineCount, DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine));
             return lineSize.Height * lineCount;
@@ -274,8 +275,8 @@ namespace TermSharp.Rows
             content = builder.ToString();
             var oldLengthInTextElements = lengthInTextElements;
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
-
-            var charsOnLine = (int)Math.Floor(lineSize.Width / charWidth);
+            // Math.Max used to prevent division by zero errors on windows narrower than one character
+            var charsOnLine = Math.Max((int)Math.Floor(lineSize.Width / charWidth), 1);
             var result = DivisionWithCeiling(oldLengthInTextElements == 0 ? 1 : oldLengthInTextElements, charsOnLine)
                 != DivisionWithCeiling(lengthInTextElements == 0 ? 1 : lengthInTextElements, charsOnLine);
             return result;
