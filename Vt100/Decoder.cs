@@ -77,6 +77,10 @@ namespace TermSharp.Vt100
                 {
                     HandleRegularCharacter(" ");
                 }
+                else if(ControlByte.LockShiftG0 == (ControlByte)c || ControlByte.LockShiftG1 == (ControlByte)c)
+                {
+                    //ignore, as we do not support character set switching
+                }
                 else if(char.IsControl(c))
                 {
                     if(c < 32)
@@ -223,7 +227,10 @@ namespace TermSharp.Vt100
                 HandleTerminalReset();
                 break;
             case '(':
-                // G0 character set, we ignore this, at least for now
+            case ')':
+            case '*':
+            case '+':
+                // G0-G3 character set, we ignore this, at least for now
                 ignoreNextChar = true;
                 break;
             case '7':
