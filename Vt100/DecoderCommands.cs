@@ -254,7 +254,9 @@ namespace TermSharp.Vt100
                     var parameter = parent.currentParams[i];
                     if(!parameter.HasValue)
                     {
-                        continue;
+                        // no parameter is interpreted as 0
+                        // todo: analyze if this change can be made more general, in all ANSI codes
+                        parameter = 0;
                     }
                     var value = parameter.Value;
                     Action<GraphicRendition> handler;
