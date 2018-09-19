@@ -51,7 +51,7 @@ namespace TermSharp.Rows
         {
             ctx.SetColor(defaultForeground);
             var newLinesAt = new List<int> { 0 }; // contains indices of line wraps (i.e. \n)
-            var charsOnLine = Math.Max(1, MaximalColumn + 1);
+            var charsOnLine = MaximalColumn + 1;
 
             var result = new StringBuilder();
             var enumerator = StringInfo.GetTextElementEnumerator(content);
@@ -147,7 +147,7 @@ namespace TermSharp.Rows
 
         public virtual void DrawCursor(Context ctx, int offset, bool focused)
         {
-            var maxColumn = Math.Max(1, MaximalColumn + 1);
+            var maxColumn = MaximalColumn + 1;
             var column = offset % maxColumn;
             var row = offset / maxColumn;
             ctx.SetColor(defaultForeground);
