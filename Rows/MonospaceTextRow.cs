@@ -214,7 +214,7 @@ namespace TermSharp.Rows
                     specialForegrounds.Remove(i);
                 }
             }
-            content = builder.ToString().TrimEnd();
+            content = builder.ToString().TrimEnd().PadRight(from, ' ');
             lengthInTextElements = new StringInfo(content).LengthInTextElements;
         }
 
