@@ -83,12 +83,12 @@ namespace TermSharp.Vt100
                 }
                 else if(char.IsControl(c))
                 {
-                    if(c < 32)
+                    if(c > 0 && c < 32)
                     {
                         Feed("^");
                         Feed(((char)(c + 64)).ToString());
                     }
-                    else if(c != 127) //intentionally do nothing for DEL character
+                    else if(c != 0 && c != 127) // intentionally do nothing for NULL/DEL characters
                     {
                         logger.Log(string.Format("Unimplemented control character 0x{0:X}.", (int)c));
                     }
