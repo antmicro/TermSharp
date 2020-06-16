@@ -177,20 +177,41 @@ namespace TermSharp.Vt100
 
         private void SetMode()
         {
-            if(privateModeCode && GetParamOrDefault(0, 0) == 25)
+            if(privateModeCode)
             {
-                terminal.Cursor.Enabled = true;
-                return;
+                switch(GetParamOrDefault(0, 0))
+                {
+                    case 5:
+                        graphicRendition.Negative = true;
+                        return;
+                    case 7:
+                        // Enable wraparound mode - we do it by default, have no option to turn it off
+                        // This is effectively a no-op.
+                        return;
+                    case 25:
+                        terminal.Cursor.Enabled = true;
+                        return;
+                }
             }
             logger.Log(string.Format("Unimplemented mode set with params {0}.", ParamsToString()));
         }
 
         private void ResetMode()
         {
-            if(privateModeCode && GetParamOrDefault(0, 0) == 25)
+            if(privateModeCode)
             {
-                terminal.Cursor.Enabled = false;
-                return;
+                switch(GetParamOrDefault(0, 0))
+                {
+                    case 4:
+                        // Disable insert mode. We do not handle this mode, so this is a no-op
+                        return;
+                    case 5:
+                        graphicRendition.Negative = false;
+                        return;
+                    case 25:
+                        terminal.Cursor.Enabled = false;
+                        return;
+                }
             }
             logger.Log(string.Format("Unimplemented mode reset with params {0}.", ParamsToString()));
         }
@@ -491,8 +512,10 @@ namespace TermSharp.Vt100
                 { 0, x => x.Reset() },
                 { 1, x => x.Bright = true },
                 { 7, x => x.Negative = true },
+                { 10, x => { /* Select primary font. We don't support font switching, so this is always no-op */ }},
                 { 21, x => x.Bright = false },
-                { 28, x => x.Negative = false },
+                { 24, x => { /* Underline off. We don't handle underline yet, so this is always no-op */ }},
+                { 27, x => x.Negative = false },
                 { 39, x => x.Foreground = null },
                 { 49, x => x.Background = null }
             };
