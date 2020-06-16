@@ -200,7 +200,7 @@ namespace TermSharp.Vt100
                 }
                 else
                 {
-                    logger.Log(string.Format("Unimplemented ANSI code {0}.", c));
+                    logger.Log(string.Format("Unimplemented ANSI code {0}, data {1}.", c, csiCodeData));
                     inAnsiCode = false;
                     csiCodeData = null;
                     privateModeCode = false;
