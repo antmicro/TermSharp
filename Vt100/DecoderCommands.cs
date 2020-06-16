@@ -241,6 +241,8 @@ namespace TermSharp.Vt100
             commands.Add('l', ResetMode);
             commands.Add('c', DeviceAttributes);
             commands.Add('d', CursorVerticalAbsolute);
+
+            commands.Add('`', CursorHorizontalAbsolute);
         }
 
         private readonly Dictionary<char, Action> commands;
