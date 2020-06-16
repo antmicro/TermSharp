@@ -64,6 +64,12 @@ namespace TermSharp.Vt100
             cursor.Position = cursor.Position.WithX(column);
         }
 
+        private void CursorVerticalAbsolute()
+        {
+            var row = GetParamOrDefault(0, 1);
+            cursor.Position = cursor.Position.WithY(row);
+        }
+
         private void CursorPosition()
         {
             var row = GetParamOrDefault(0, 1);
@@ -234,6 +240,7 @@ namespace TermSharp.Vt100
             commands.Add('h', SetMode);
             commands.Add('l', ResetMode);
             commands.Add('c', DeviceAttributes);
+            commands.Add('d', CursorVerticalAbsolute);
         }
 
         private readonly Dictionary<char, Action> commands;
