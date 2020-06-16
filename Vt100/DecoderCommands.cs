@@ -98,6 +98,17 @@ namespace TermSharp.Vt100
             terminal.EraseScreen(clearBegin, clearEnd, graphicRendition.Background);
         }
 
+        private void EraseCharacter()
+        {
+            var amount = GetParamOrDefault(0, 1);
+            if(amount == 0)
+            {
+                amount = 1;
+            }
+            var currentRow = (MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y);
+            currentRow.Erase(terminal.Cursor.Position.X, terminal.Cursor.Position.X + amount - 1, graphicRendition.Background);
+        }
+
         private void EraseInLine()
         {
             var type = GetParamOrDefault(0, 0);
@@ -213,6 +224,7 @@ namespace TermSharp.Vt100
             commands.Add('f', CursorPosition);
             commands.Add('J', EraseDisplay);
             commands.Add('K', EraseInLine);
+            commands.Add('X', EraseCharacter);
 
             commands.Add('m', () => graphicRendition.HandleSgr());
             commands.Add('n', DeviceStatusReport);
