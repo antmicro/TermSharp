@@ -43,8 +43,8 @@ namespace TermSharp.Rows
 
             var charsOnLine = MaximalColumn + 1;
             var lengthInTextElementsAtLeastOne = lengthInTextElements == 0 ? 1 : lengthInTextElements; // because even empty line has height of one line
-            lineCount = Math.Max(minimalSublineCount, DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine));
-            return lineSize.Height * lineCount;
+            SublineCount = Math.Max(minimalSublineCount, DivisionWithCeiling(lengthInTextElementsAtLeastOne, charsOnLine));
+            return lineSize.Height * SublineCount;
         }
 
         public virtual void Draw(Context ctx, Rectangle selectedArea, SelectionDirection selectionDirection, SelectionMode selectionMode)
@@ -282,13 +282,7 @@ namespace TermSharp.Rows
             return result;
         }
 
-        public virtual int SublineCount
-        {
-            get
-            {
-                return lineCount;
-            }
-        }
+        public int SublineCount { get; private set; }
 
         public double LineHeight
         {
@@ -302,7 +296,7 @@ namespace TermSharp.Rows
         {
             get
             {
-                return MaximalColumn * lineCount;
+                return MaximalColumn * SublineCount;
             }
         }
 
@@ -345,7 +339,6 @@ namespace TermSharp.Rows
         }
 
         private double charWidth;
-        private int lineCount;
         private Size lineSize;
         private TextLayout textLayout;
         private string selectedContent;
