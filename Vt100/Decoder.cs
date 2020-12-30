@@ -54,13 +54,7 @@ namespace TermSharp.Vt100
                 }
                 else if(ControlByte.LineFeed == (ControlByte)c)
                 {
-                    var oldY = cursor.Position.Y;
-                    cursor.Position = cursor.Position.ShiftedByY(1);
-                    if(oldY == cursor.Position.Y)
-                    {
-                        terminal.AppendRow(new MonospaceTextRow(string.Empty), true);
-                        cursor.Position = cursor.Position.ShiftedByY(1);
-                    }
+                    HandleLineFeed();
                 }
                 else if(ControlByte.CarriageReturn == (ControlByte)c)
                 {
@@ -256,6 +250,17 @@ namespace TermSharp.Vt100
                 terminal.AppendRow(new MonospaceTextRow(string.Empty));
             }
             terminal.Cursor.Position = new IntegerPosition();
+        }
+
+        private void HandleLineFeed()
+        {
+            var oldY = cursor.Position.Y;
+            cursor.Position = cursor.Position.ShiftedByY(1);
+            if(oldY == cursor.Position.Y)
+            {
+                terminal.AppendRow(new MonospaceTextRow(string.Empty), true);
+                cursor.Position = cursor.Position.ShiftedByY(1);
+            }
         }
 
         private ReceiveState receiveState;
