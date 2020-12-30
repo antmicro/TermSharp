@@ -29,9 +29,9 @@ namespace TermSharp.Rows
             cursorInRow = null;
             defaultForeground = parameters.DefaultForeground;
             selectionColor = parameters.SelectionColor;
-            textLayout = TextLayoutCache.GetValue(parameters);
-            lineSize = LineSizeCache.GetValue(parameters);
-            charWidth = CharSizeCache.GetValue(parameters).Width;
+            textLayout = RowUtils.TextLayoutCache.GetValue(parameters);
+            lineSize = RowUtils.LineSizeCache.GetValue(parameters);
+            charWidth = RowUtils.CharSizeCache.GetValue(parameters).Width;
 
             if(lineSize.Width == 0)
             {
@@ -355,10 +355,6 @@ namespace TermSharp.Rows
         private int minimalSublineCount;
         private Dictionary<int, Color> specialForegrounds;
         private Dictionary<int, Color> specialBackgrounds;
-
-        private static readonly SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
-        private static readonly SimpleCache<ILayoutParameters, Size> LineSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetLineSizeFromLayoutParams);
-        private static readonly SimpleCache<ILayoutParameters, Size> CharSizeCache = new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
     }
 }
 
