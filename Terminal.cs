@@ -58,13 +58,35 @@ namespace TermSharp
         public void AppendRow(IRow row, bool treatRowAsNonDummy = false)
         {
             var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
-            rows.Add(row);
+
+            var heightMapNeedsRebuilding = false;
             if(treatRowAsNonDummy)
             {
-                lastNonDummyRow = Math.Max(lastNonDummyRow, rows.Count);
+                var position = GetScreenRowIndex(Cursor.Position.Y);
+                var rowId = Math.Min(position, rows.Count - 1);
+
+                if(rowId < rows.Count - 1)
+                {
+                    rows.RemoveRange(rowId + 1, rows.Count - rowId - 1);
+                    heightMapNeedsRebuilding = true;
+                }
+
+                // this counts in the row we are about to add
+                lastNonDummyRow = rows.Count;
             }
+
+            rows.Add(row);
             row.PrepareForDrawing(layoutParameters);
-            AddToHeightMap(row.PrepareForDrawing(layoutParameters));
+
+            if(heightMapNeedsRebuilding)
+            {
+                // this must be done after adding the row, otherwise the cursor will be wrongly placed
+                RebuildHeightMap(true);
+            }
+            else
+            {
+                AddToHeightMap(row.PrepareForDrawing(layoutParameters));
+            }
             RefreshInner(weWereAtEnd);
         }
 
