@@ -17,7 +17,8 @@ namespace TermSharp.Vt100
         LockShiftG0 = 0xF,
         Escape = 0x1B,
         ControlSequenceIntroducer = (byte)'[',
-        Delete = 0x7F
+        Delete = 0x7F,
+        OperatingSystemCommand = (byte)']'
     }
 }
 

@@ -29,6 +29,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LayoutParameters.cs" />
@@ -51,6 +52,8 @@
     <Compile Include="Misc\ClipboardData.cs" />
     <Compile Include="Vt100\ByteUtf8Decoder.cs" />
     <Compile Include="Misc\IGenerationAware.cs" />
+    <Compile Include="Rows\ImageRow.cs" />
+    <Compile Include="Misc\InlineImage.cs" />
     <Compile Include="Rows\RowUtils.cs" />
   </ItemGroup>
   <ItemGroup>
