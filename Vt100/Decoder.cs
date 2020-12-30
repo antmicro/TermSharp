@@ -4,11 +4,13 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TermSharp.Misc;
 using TermSharp.Rows;
+using Xwt.Drawing;
 
 namespace TermSharp.Vt100
 {
@@ -42,6 +44,14 @@ namespace TermSharp.Vt100
                 if(receiveState == ReceiveState.AnsiCode)
                 {
                     HandleAnsiCode(c);
+                }
+                else if(receiveState == ReceiveState.SystemCommandNumber)
+                {
+                    HandleSystemCommandCode(c);
+                }
+                else if(receiveState == ReceiveState.Image)
+                {
+                    HandleReceiveImage(c);
                 }
                 else if(ControlByte.Backspace == (ControlByte)c)
                 {
@@ -105,11 +115,16 @@ namespace TermSharp.Vt100
         public event Action BellReceived;
 
         private void InsertCharacterAtCursor(string textElement)
-         {
-            var textRow = terminal.GetScreenRow(terminal.Cursor.Position.Y, true) as MonospaceTextRow;
-            if(textRow == null)
+        {
+            var row = terminal.GetScreenRow(terminal.Cursor.Position.Y, true);
+            if(row is ImageRow)
             {
-                throw new InvalidOperationException("MonospaceTextRow expected but other type found.");
+                logger.Log($"Tried to insert character at the top of the image");
+                return;
+            }
+            if(!(row is MonospaceTextRow textRow))
+            {
+                throw new InvalidOperationException($"MonospaceTextRow expected but {row.GetType().Name} type found.");
             }
             if(textRow.PutCharacterAt(terminal.Cursor.Position.X, textElement, graphicRendition.EffectiveForeground, graphicRendition.EffectiveBackground))
             {
@@ -139,6 +154,12 @@ namespace TermSharp.Vt100
 
         private void HandleAnsiCode(char c)
         {
+            if(ControlByte.OperatingSystemCommand == (ControlByte)c)
+            {
+                receiveState = ReceiveState.SystemCommandNumber;
+                systemCommandNumber = new StringBuilder();
+                return;
+            }
             if(csiCodeData == null)
             {
                 if(ControlByte.ControlSequenceIntroducer != (ControlByte)c)
@@ -263,6 +284,63 @@ namespace TermSharp.Vt100
             }
         }
 
+        private void HandleSystemCommandCode(char c)
+        {
+            if(char.IsDigit(c))
+            {
+                systemCommandNumber.Append(c);
+                return;
+            }
+
+            if(c == ';')
+            {
+                if(!int.TryParse(systemCommandNumber.ToString(), out var codeNumber))
+                {
+                    logger.Log($"Couldn't parse the system command number: '{(systemCommandNumber.ToString())}'");
+                    receiveState = ReceiveState.Default;
+                    return;
+                }
+
+                if(codeNumber == InlineImage.InlineImageCode)
+                {
+                    receiveState = ReceiveState.Image;
+                    base64ImageBuilder = new StringBuilder();
+                }
+                systemCommandNumber = null;
+                return;
+            }
+
+            logger.Log($"Unexpected character '{c}' in System Command Number.");
+            receiveState = ReceiveState.Default;
+        }
+
+        private void HandleReceiveImage(char c)
+        {
+            if(ControlByte.Bell != (ControlByte)c)
+            {
+                base64ImageBuilder.Append(c);
+            }
+            else
+            {
+                using(var stream = new MemoryStream(Convert.FromBase64String(base64ImageBuilder.ToString())))
+                {
+                    var image = Image.FromStream(stream);
+                    DrawImage(image);
+                }
+
+                base64ImageBuilder = null;
+                receiveState = ReceiveState.Default;
+            }
+        }
+
+        private void DrawImage(Image image)
+        {
+            var imageRow = new ImageRow(image);
+            terminal.AppendRow(imageRow, true);
+            cursor.Position = cursor.Position.ShiftedByY(imageRow.SublineCount);
+            HandleLineFeed();
+        }
+
         private ReceiveState receiveState;
         private GraphicRendition graphicRendition;
         private GraphicRendition savedGraphicRendition;
@@ -271,6 +349,8 @@ namespace TermSharp.Vt100
         private bool privateModeCode;
         private bool cursorAtTheEndOfLine;
         private StringBuilder csiCodeData;
+        private StringBuilder systemCommandNumber;
+        private StringBuilder base64ImageBuilder;
         private readonly Terminal terminal;
         private readonly Cursor cursor;
         private readonly Action<byte> responseCallback;
@@ -281,6 +361,8 @@ namespace TermSharp.Vt100
             Default,
             IgnoreNextChar,
             AnsiCode,
+            SystemCommandNumber,
+            Image
         }
 
         private sealed class Cursor
