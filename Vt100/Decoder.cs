@@ -25,20 +25,21 @@ namespace TermSharp.Vt100
             InitializeCommands();
             cursor = new Cursor(this);
             CharReceivedBlinkDisabledRounds = 1;
+            receiveState = ReceiveState.Default;
         }
 
         public void Feed(string textElement)
         {
-            if(ignoreNextChar)
+            if(receiveState == ReceiveState.IgnoreNextChar)
             {
-                ignoreNextChar = false;
+                receiveState = ReceiveState.Default;
                 return;
             }
             terminal.Cursor.StayOnForNBlinks(CharReceivedBlinkDisabledRounds);
             if(textElement.Length == 1)
             {
                 var c = textElement[0];
-                if(inAnsiCode)
+                if(receiveState == ReceiveState.AnsiCode)
                 {
                     HandleAnsiCode(c);
                 }
@@ -49,7 +50,7 @@ namespace TermSharp.Vt100
                 }
                 else if(ControlByte.Escape == (ControlByte)c)
                 {
-                    inAnsiCode = true;
+                    receiveState = ReceiveState.AnsiCode;
                 }
                 else if(ControlByte.LineFeed == (ControlByte)c)
                 {
@@ -149,7 +150,7 @@ namespace TermSharp.Vt100
                 if(ControlByte.ControlSequenceIntroducer != (ControlByte)c)
                 {
                     HandleNonCsiCode(c);
-                    inAnsiCode = false;
+                    receiveState = ReceiveState.Default;
                     privateModeCode = false;
                     return;
                 }
@@ -159,7 +160,7 @@ namespace TermSharp.Vt100
             if(ControlByte.Escape == (ControlByte)c)
             {
                 logger.Log("Escape character within ANSI code.");
-                inAnsiCode = false;
+                receiveState = ReceiveState.Default;
                 privateModeCode = false;
                 csiCodeData = null;
                 return;
@@ -194,14 +195,14 @@ namespace TermSharp.Vt100
                         currentParams = parsed.ToArray();
                         commands[c]();
                     }
-                    inAnsiCode = false;
+                    receiveState = ReceiveState.Default;
                     privateModeCode = false;
                     csiCodeData = null;
                 }
                 else
                 {
                     logger.Log(string.Format("Unimplemented ANSI code {0}, data {1}.", c, csiCodeData));
-                    inAnsiCode = false;
+                    receiveState = ReceiveState.Default;
                     csiCodeData = null;
                     privateModeCode = false;
                 }
@@ -231,7 +232,7 @@ namespace TermSharp.Vt100
             case '*':
             case '+':
                 // G0-G3 character set, we ignore this, at least for now
-                ignoreNextChar = true;
+                receiveState = ReceiveState.IgnoreNextChar;
                 break;
             case '7':
                 SaveCursorPosition();
@@ -257,12 +258,11 @@ namespace TermSharp.Vt100
             terminal.Cursor.Position = new IntegerPosition();
         }
 
-        private bool ignoreNextChar;
+        private ReceiveState receiveState;
         private GraphicRendition graphicRendition;
         private GraphicRendition savedGraphicRendition;
         private IntegerPosition savedCursorPosition;
         private int?[] currentParams;
-        private bool inAnsiCode;
         private bool privateModeCode;
         private bool cursorAtTheEndOfLine;
         private StringBuilder csiCodeData;
@@ -270,6 +270,13 @@ namespace TermSharp.Vt100
         private readonly Cursor cursor;
         private readonly Action<byte> responseCallback;
         private readonly IDecoderLogger logger;
+
+        private enum ReceiveState
+        {
+            Default,
+            IgnoreNextChar,
+            AnsiCode,
+        }
 
         private sealed class Cursor
         {
