@@ -443,7 +443,7 @@ namespace TermSharp
             layoutParameters.Width = canvas.Size.Width;
 
             #if REMOVE_DUMMY_ROWS
-            var numberOfVisibleLines = (int)Math.Floor(ScreenSize / ((MonospaceTextRow)rows[0]).LineHeight);
+            var numberOfVisibleLines = (int)Math.Floor(ScreenSize / rows[0].LineHeight);
             if(heightMap.Length > lastNonDummyRow + 1 && lastNonDummyRow < numberOfVisibleLines)
             {
                 rows.RemoveRange(lastNonDummyRow + 1, heightMap.Length - lastNonDummyRow - 2);

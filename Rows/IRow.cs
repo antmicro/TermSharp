@@ -18,6 +18,9 @@ namespace TermSharp.Rows
         void FillClipboardData(ClipboardData data);
         void Erase(int from, int to, Color? background);
         int CurrentMaximalCursorPosition { get; }
+        int SublineCount { get; }
+        int MaximalColumn { get; }
+        double LineHeight { get; }
     }
 }
 

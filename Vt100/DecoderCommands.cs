@@ -111,14 +111,14 @@ namespace TermSharp.Vt100
             {
                 amount = 1;
             }
-            var currentRow = (MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y);
+            var currentRow = terminal.GetScreenRow(terminal.Cursor.Position.Y);
             currentRow.Erase(terminal.Cursor.Position.X, terminal.Cursor.Position.X + amount - 1, graphicRendition.Background);
         }
 
         private void EraseInLine()
         {
             var type = GetParamOrDefault(0, 0);
-            var currentRow = (MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y);
+            var currentRow = terminal.GetScreenRow(terminal.Cursor.Position.Y);
 
             var screenRowBegin = (terminal.Cursor.Position.X / (currentRow.MaximalColumn + 1)) * (currentRow.MaximalColumn + 1);
             var screenRowEnd = screenRowBegin + currentRow.MaximalColumn + 1;

@@ -131,7 +131,7 @@ namespace TermSharp.Vt100
                 cursorAtTheEndOfLine = false;
             }
             InsertCharacterAtCursor(textElement);
-            var maximalColumn = ((MonospaceTextRow)terminal.GetScreenRow(terminal.Cursor.Position.Y)).MaximalColumn;
+            var maximalColumn = terminal.GetScreenRow(terminal.Cursor.Position.Y).MaximalColumn;
             if(terminal.Cursor.Position.X % (maximalColumn + 1) != maximalColumn)
             {
                 terminal.Cursor.Position = terminal.Cursor.Position.ShiftedByX(1);
@@ -294,13 +294,13 @@ namespace TermSharp.Vt100
                     var resultY = 0;
                     for(var i = 0; i < terminalPosition.Y; i++)
                     {
-                        resultY += ((MonospaceTextRow)parent.terminal.GetScreenRow(i)).SublineCount;
+                        resultY += parent.terminal.GetScreenRow(i).SublineCount;
                     }
 
                     // it can happen that the first row is partially hidden
                     // our vt100 cursor should be counted from the first completely displayed subrow of the first row
                     double hiddenHeight;
-                    var firstRow = (MonospaceTextRow)parent.terminal.GetFirstScreenRow(out hiddenHeight);
+                    var firstRow = parent.terminal.GetFirstScreenRow(out hiddenHeight);
                     resultY -= (int)Math.Ceiling(hiddenHeight / firstRow.LineHeight);
 
                     // it can happen that normal cursor is not in vt100 cursor range which gives us negative result here
@@ -310,7 +310,7 @@ namespace TermSharp.Vt100
                         resultY = 0;
                     }
 
-                    var charsInRow = ((MonospaceTextRow)parent.terminal.GetScreenRow(terminalPosition.Y)).MaximalColumn + 1;
+                    var charsInRow = parent.terminal.GetScreenRow(terminalPosition.Y).MaximalColumn + 1;
                     var resultX = terminalPosition.X % charsInRow;
                     resultY += terminalPosition.X / charsInRow;
                     return new IntegerPosition(resultX + 1, resultY + 1);
@@ -320,7 +320,7 @@ namespace TermSharp.Vt100
                     parent.cursorAtTheEndOfLine = false;
 
                     double hiddenPart;
-                    var firstRow = (MonospaceTextRow)parent.terminal.GetFirstScreenRow(out hiddenPart);
+                    var firstRow = parent.terminal.GetFirstScreenRow(out hiddenPart);
 
                     var maxX = firstRow.MaximalColumn + 1;
                     var maxY = (int)Math.Floor(parent.terminal.ScreenSize / firstRow.LineHeight);
@@ -340,9 +340,9 @@ namespace TermSharp.Vt100
                             parent.terminal.AppendRow(new MonospaceTextRow(""));
                         }
 
-                        vt100Y -= ((MonospaceTextRow)parent.terminal.GetScreenRow(resultY)).SublineCount;
+                        vt100Y -= parent.terminal.GetScreenRow(resultY).SublineCount;
                     }
-                    var row = (MonospaceTextRow)parent.terminal.GetScreenRow(resultY);
+                    var row = parent.terminal.GetScreenRow(resultY);
                     var resultX = (row.SublineCount - 1 + vt100Y) * (row.MaximalColumn + 1) + value.X - 1;
                     parent.terminal.Cursor.Position = new IntegerPosition(resultX, resultY);
                 }
