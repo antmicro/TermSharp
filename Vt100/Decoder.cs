@@ -337,6 +337,7 @@ namespace TermSharp.Vt100
                         resultY++;
                         if(resultY >= parent.terminal.ScreenRowCount)
                         {
+                            // append dummy row to calculate proper position
                             parent.terminal.AppendRow(new MonospaceTextRow(""));
                         }
 
