@@ -338,6 +338,11 @@ namespace TermSharp.Rows
             return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : Colors.Black;
         }
 
+        public override string ToString()
+        {
+            return $"[MonospaceTextRow: content={content}]";
+        }
+
         private double charWidth;
         private Size lineSize;
         private TextLayout textLayout;
