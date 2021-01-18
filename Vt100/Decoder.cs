@@ -41,7 +41,14 @@ namespace TermSharp.Vt100
             if(textElement.Length == 1)
             {
                 var c = textElement[0];
-                if(receiveState == ReceiveState.AnsiCode)
+                if(receiveState == ReceiveState.EatUpToBell)
+                {
+                    if((ControlByte)c == ControlByte.Bell)
+                    {
+                        receiveState = ReceiveState.Default;
+                    }
+                }
+                else if(receiveState == ReceiveState.AnsiCode)
                 {
                     HandleAnsiCode(c);
                 }
@@ -306,6 +313,11 @@ namespace TermSharp.Vt100
                     receiveState = ReceiveState.Image;
                     base64ImageBuilder = new StringBuilder();
                 }
+                else
+                {
+                    logger.Log($"Not supported System Command Code 0x{0:X}. Ignoring the rest of the control code", codeNumber);
+                    receiveState = ReceiveState.EatUpToBell;
+                }
                 systemCommandNumber = null;
                 return;
             }
@@ -362,7 +374,8 @@ namespace TermSharp.Vt100
             IgnoreNextChar,
             AnsiCode,
             SystemCommandNumber,
-            Image
+            Image,
+            EatUpToBell
         }
 
         private sealed class Cursor
