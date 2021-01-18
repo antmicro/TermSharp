@@ -334,11 +334,15 @@ namespace TermSharp.Vt100
             }
             else
             {
-                using(var stream = new MemoryStream(Convert.FromBase64String(base64ImageBuilder.ToString())))
+                if(!Vt100ITermFileEscapeCodeHandler.TryParse(base64ImageBuilder.ToString(), out var handler))
                 {
-                    var image = Image.FromStream(stream);
-                    DrawImage(image);
+                    logger.Log(handler.Error);
+                    base64ImageBuilder = null;
+                    receiveState = ReceiveState.Default;
+                    return;
                 }
+
+                DrawImage(handler.Image);
 
                 base64ImageBuilder = null;
                 receiveState = ReceiveState.Default;

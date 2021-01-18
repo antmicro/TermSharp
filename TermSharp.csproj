@@ -45,6 +45,7 @@
     <Compile Include="Vt100\Encoder.cs" />
     <Compile Include="Vt100\DecoderCommands.cs" />
     <Compile Include="Vt100\ControlByte.cs" />
+    <Compile Include="Vt100\Vt100ITermFileEscapeCodeHandler.cs" />
     <Compile Include="Misc\SimpleCache.cs" />
     <Compile Include="Misc\Utilities.cs" />
     <Compile Include="Rows\IRow.cs" />

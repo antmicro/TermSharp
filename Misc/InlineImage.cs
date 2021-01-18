@@ -35,7 +35,7 @@ namespace TermSharp.Misc
 
         private static string GenerateControlSequence(string encodedImage)
         {
-            return $"{(char)ControlByte.Escape}{(char)ControlByte.OperatingSystemCommand}{InlineImageCode};{encodedImage}{(char)ControlByte.Bell}";
+            return $"{(char)ControlByte.Escape}{(char)ControlByte.OperatingSystemCommand}{InlineImageCode};File=:{encodedImage}{(char)ControlByte.Bell}";
         }
 
         public const int InlineImageCode = 1337;
