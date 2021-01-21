@@ -308,7 +308,7 @@ namespace TermSharp.Vt100
                     return;
                 }
 
-                if(codeNumber == InlineImage.InlineImageCode)
+                if(codeNumber == InlineImageCode)
                 {
                     receiveState = ReceiveState.Image;
                     base64ImageBuilder = new StringBuilder();
@@ -356,6 +356,8 @@ namespace TermSharp.Vt100
             cursor.Position = cursor.Position.ShiftedByY(imageRow.SublineCount);
             HandleLineFeed();
         }
+
+        private const int InlineImageCode = 1337;
 
         private ReceiveState receiveState;
         private GraphicRendition graphicRendition;
