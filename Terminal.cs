@@ -404,7 +404,13 @@ namespace TermSharp
                     canvas.SelectedArea = default(Rectangle);
                 }
                 currentScrollStart = null;
+
                 RefreshSelection();
+
+                if(canvas.SelectedArea != default(Rectangle))
+                {
+                    Clipboard.SetPrimaryText(CollectClipboardData().Text);
+                }
             }
         }
 
