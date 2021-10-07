@@ -4,7 +4,7 @@ Copyright (c) 2016-2021 [Antmicro](https://antmicro.com)
 
 Termsharp is a feature-rich VT100 terminal emulator widget, written in C#.
 
-It is developed as part of the (Renode)[https://www.renode.io] emulation framework.
+It is developed as part of the [Renode](https://www.renode.io) emulation framework.
 
 Termsharp relies on the [XWT UI toolkit](https://github.com/mono/xwt).
 
