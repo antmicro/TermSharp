@@ -324,6 +324,14 @@ namespace TermSharp.Vt100
                         i++;
                         Background = GetExtendedColor(ref i);
                     }
+                    else if(value >= 90 && value <= 97)
+                    {
+                        Foreground = Brighten(GetConsolePaletteColor(value - 90));
+                    }
+                    else if(value >= 100 && value <= 107)
+                    {
+                        Background = Brighten(GetConsolePaletteColor(value - 100));
+                    }
                     else
                     {
                         parent.logger.Log(string.Format("Unimplemented SGR code {0}.", value));
