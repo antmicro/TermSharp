@@ -12,8 +12,8 @@ namespace TermSharp.Rows
 {
     internal class RowUtils
     {
-        public static SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache => new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
-        public static SimpleCache<ILayoutParameters, Size> LineSizeCache => new SimpleCache<ILayoutParameters, Size>(Utilities.GetLineSizeFromLayoutParams);
-        public static SimpleCache<ILayoutParameters, Size> CharSizeCache => new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
+        public static SimpleCache<ILayoutParameters, TextLayout> TextLayoutCache { get; } = new SimpleCache<ILayoutParameters, TextLayout>(Utilities.GetTextLayoutFromLayoutParams);
+        public static SimpleCache<ILayoutParameters, Size> LineSizeCache { get; } = new SimpleCache<ILayoutParameters, Size>(Utilities.GetLineSizeFromLayoutParams);
+        public static SimpleCache<ILayoutParameters, Size> CharSizeCache { get; } = new SimpleCache<ILayoutParameters, Size>(Utilities.GetCharSizeFromLayoutParams);
     }
 }
