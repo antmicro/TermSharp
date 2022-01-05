@@ -69,6 +69,11 @@ namespace TermSharp.Example
             Content = terminal;
         }
 
+        public void Dispose()
+        {
+            terminal.Close();
+        }
+
         public void Feed(byte b)
         {
             utfDecoder.Feed(b);

@@ -16,7 +16,7 @@ namespace TermSharp
             this.terminal = terminal;
             this.canvas = canvas;
             BlinkingRate = TimeSpan.FromMilliseconds(300);
-            HandleBlinkingAsync();
+            Task blinkingFunction = HandleBlinkingAsync();
         }
 
         public void StayOnForNBlinks(int n)
@@ -72,9 +72,9 @@ namespace TermSharp
             }
         }
 
-        private async void HandleBlinkingAsync()
+        private async Task HandleBlinkingAsync()
         {
-            while(true)
+            while(!awaitingBlinkerHalt)
             {
                 await Task.Delay(BlinkingRate);
                 if(blinkWaitRounds > 0)
@@ -88,7 +88,16 @@ namespace TermSharp
                     canvas.Redraw();
                 }
             }
+            awaitingBlinkerHalt = false;
         }
+
+        public void Dispose()
+        {
+            awaitingBlinkerHalt = true;
+            while(awaitingBlinkerHalt);
+        }
+
+        private bool awaitingBlinkerHalt;
 
         private int blinkWaitRounds;
         private bool blinkState;
