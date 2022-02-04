@@ -55,6 +55,12 @@ namespace TermSharp
             scrollbar.StepIncrement = Utilities.GetLineSizeFromLayoutParams(layoutParameters).Height;
         }
 
+        public void Close()
+        {
+            cursor.Dispose();
+            base.Dispose(disposing: true);
+        }
+
         public void AppendRow(IRow row, bool treatRowAsNonDummy = false)
         {
             var weWereAtEnd = scrollbar.Value == GetMaximumScrollbarValue();
