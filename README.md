@@ -1,6 +1,6 @@
 # Termsharp
 
-Copyright (c) 2016-2021 [Antmicro](https://antmicro.com)
+Copyright (c) 2016-2022 [Antmicro](https://antmicro.com)
 
 Termsharp is a feature-rich VT100 terminal emulator widget, written in C#.
 
