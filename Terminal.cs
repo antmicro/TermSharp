@@ -172,7 +172,7 @@ namespace TermSharp
 
         public void MoveScrollbarToEnd()
         {
-            SetScrollbarValue(scrollbar.UpperValue - canvas.Bounds.Height);
+            SetScrollbarValue(scrollbar.UpperValue - canvas.CachedBounds.Height);
         }
 
         public Font CurrentFont
@@ -219,7 +219,7 @@ namespace TermSharp
         {
             get
             {
-                return canvas.Bounds.Height;
+                return canvas.CachedBounds.Height;
             }
         }
 
@@ -431,9 +431,9 @@ namespace TermSharp
             {
                 SetAutoscrollValue((int)e.Position.Y);
             }
-            else if(e.Position.Y > canvas.Bounds.Height)
+            else if(e.Position.Y > canvas.CachedBounds.Height)
             {
-                SetAutoscrollValue((int)(e.Position.Y - canvas.Bounds.Height));
+                SetAutoscrollValue((int)(e.Position.Y - canvas.CachedBounds.Height));
             }
             else
             {
@@ -468,6 +468,8 @@ namespace TermSharp
 #endif
         {
             canvas.SelectedArea = default(Rectangle);
+            // refresh cached bounds value
+            canvas.CachedBounds = canvas.Bounds;
 
             double oldPosition;
             var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out oldPosition);
@@ -530,7 +532,7 @@ namespace TermSharp
         private void RefreshInner(bool weWereAtEnd)
         {
             canvas.Redraw();
-            scrollbar.Sensitive = GetMaximumHeight() > canvas.Bounds.Height;
+            scrollbar.Sensitive = GetMaximumHeight() > canvas.CachedBounds.Height;
 
             scrollbar.UpperValue = GetMaximumHeight();
             if(weWereAtEnd)
@@ -628,7 +630,7 @@ namespace TermSharp
             heightMap = newHeightMap;
             unfinishedHeightMap = null;
 
-            scrollbar.PageSize = canvas.Bounds.Height; // we update it here to get new value on GetScreenRowId (it depends on height map and this value)
+            scrollbar.PageSize = canvas.CachedBounds.Height; // we update it here to get new value on GetScreenRowId (it depends on height map and this value)
             var firstScreenRow = GetScreenRowIndex(0);
             var diff = firstScreenRow - oldFirstScreenRow;
             cursor.Position = cursor.Position.ShiftedByY(-diff);
@@ -730,6 +732,21 @@ namespace TermSharp
                 }
             }
 
+            public Rectangle CachedBounds
+            {
+                get
+                {
+                    if(!cachedBounds.HasValue)
+                    {
+                        cachedBounds = Bounds;
+                    }
+                    return cachedBounds.Value;
+                }
+                set
+                {
+                    cachedBounds = value;
+                }
+            }
             public int FirstRowToDisplay { get; set; }
 
             public double FirstRowHeight { get; set; }
@@ -762,7 +779,7 @@ namespace TermSharp
 
                 ctx.Save();
                 ctx.SetColor(parent.DefaultBackground);
-                ctx.Rectangle(new Rectangle(0, 0, Bounds.Width, Bounds.Height));
+                ctx.Rectangle(new Rectangle(0, 0, CachedBounds.Width, CachedBounds.Height));
                 ctx.Fill();
                 ctx.Restore();
 
@@ -770,7 +787,7 @@ namespace TermSharp
                 ctx.Save();
                 var i = FirstRowToDisplay;
                 var cursorRow = parent.GetScreenRowIndex(parent.Cursor.Position.Y);
-                while(i < parent.rows.Count && heightSoFar - OffsetFromFirstRow < Bounds.Height)
+                while(i < parent.rows.Count && heightSoFar - OffsetFromFirstRow < CachedBounds.Height)
                 {
                     var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
                     var rowRectangle = new Rectangle(0, heightSoFar, parent.layoutParameters.Width, height);
@@ -820,6 +837,7 @@ namespace TermSharp
             }
 
             private bool drawn;
+            private Rectangle? cachedBounds;
             private readonly Terminal parent;
         }
     }
