@@ -29,7 +29,7 @@ namespace TermSharp
             }
 
             rows = new List<IRow>();
-            heightMap = new double[0];
+            heightMap = new List<double>();
             layoutParameters = new LayoutParameters(Font, DefaultGray, Colors.LightSlateGray);
             DefaultBackground = Colors.Black;
 
@@ -478,9 +478,9 @@ namespace TermSharp
 
             #if REMOVE_DUMMY_ROWS
             var numberOfVisibleLines = (int)Math.Floor(ScreenSize / rows[0].LineHeight);
-            if(heightMap.Length > lastNonDummyRow + 1 && lastNonDummyRow < numberOfVisibleLines)
+            if(heightMap.Count > lastNonDummyRow + 1 && lastNonDummyRow < numberOfVisibleLines)
             {
-                rows.RemoveRange(lastNonDummyRow + 1, heightMap.Length - lastNonDummyRow - 2);
+                rows.RemoveRange(lastNonDummyRow + 1, heightMap.Count - lastNonDummyRow - 2);
             }
             #endif
 #if DEBUG
@@ -597,7 +597,7 @@ namespace TermSharp
         {
             if(rows.Count == 0)
             {
-                heightMap = new double[0];
+                heightMap = new List<double>();
                 return true;
             }
 
@@ -605,21 +605,21 @@ namespace TermSharp
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            double[] newHeightMap;
-            if(unfinishedHeightMap != null && unfinishedHeightMap.Length == rows.Count)
+            List<double> newHeightMap;
+            if(unfinishedHeightMap != null && unfinishedHeightMap.Count == rows.Count)
             {
                 newHeightMap = unfinishedHeightMap;
             }
             else
             {
-                newHeightMap = new double[rows.Count];
+                newHeightMap = new List<double>(rows.Count);
                 unfinishedHeightMap = newHeightMap;
             }
             var heightSoFar = 0.0;
-            for(var i = 0; i < newHeightMap.Length; i++)
+            for(var i = 0; i < rows.Count; i++)
             {
                 heightSoFar += rows[i].PrepareForDrawing(layoutParameters);
-                newHeightMap[i] = heightSoFar;
+                newHeightMap.Add(heightSoFar);
                 if(!continueEvenIfLongTask && (i % HeightMapCheckTimeoutEveryNthRow) == 1 && stopwatch.Elapsed > HeightMapRebuildTimeout)
                 {
                     return false;
@@ -638,15 +638,12 @@ namespace TermSharp
 
         private void AddToHeightMap(double value)
         {
-            if(heightMap.Length == 0)
+            if(heightMap.Count == 0)
             {
-                heightMap = new[] { value };
+                heightMap.Add(value);
                 return;
             }
-            var oldHeightMap = heightMap;
-            heightMap = new double[oldHeightMap.Length + 1];
-            Array.Copy(oldHeightMap, heightMap, oldHeightMap.Length);
-            heightMap[oldHeightMap.Length] = value + heightMap[oldHeightMap.Length - 1];
+            heightMap.Add(value + heightMap[heightMap.Count - 1]);
         }
 
         private double GetPositionOfTheRow(int rowIndex)
@@ -661,16 +658,16 @@ namespace TermSharp
 
         private double GetMaximumHeight()
         {
-            if(heightMap.Length == 0)
+            if(heightMap.Count == 0)
             {
                 return 0;
             }
-            return heightMap[heightMap.Length - 1];
+            return heightMap[heightMap.Count - 1];
         }
 
         private int FindRowIndexAtPosition(double position, out double rowStart)
         {
-            var result = Array.BinarySearch<double>(heightMap, position);
+            var result = heightMap.BinarySearch(position);
             if(result < 0)
             {
                 result = ~result;
@@ -679,7 +676,7 @@ namespace TermSharp
             {
                 result++; // because heightMap[i] shows where ith row *ends* and therefore where (i+1)th starts
             }
-            if(result == heightMap.Length)
+            if(result == heightMap.Count)
             {
                 result--;
             }
@@ -693,8 +690,8 @@ namespace TermSharp
             return FindRowIndexAtPosition(GetMaximumScrollbarValue(), out unused) + screenPosition;
         }
 
-        private double[] heightMap;
-        private double[] unfinishedHeightMap;
+        private List<double> heightMap;
+        private List<double> unfinishedHeightMap;
 #if DEBUG
         private int canvasBoundChangedGeneration;
 #endif
