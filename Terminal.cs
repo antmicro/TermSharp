@@ -125,6 +125,16 @@ namespace TermSharp
             SetScrollbarValue(scrollbar.Value + scrollbar.PageSize);
         }
 
+        public void LineUp()
+        {
+            ScrollRows(-1);
+        }
+
+        public void LineDown()
+        {
+            ScrollRows(1);
+        }
+
         public void ClearSelection()
         {
             canvas.SelectedArea = default(Rectangle);
@@ -168,6 +178,11 @@ namespace TermSharp
                 row.Erase(rowScreenPosition == from.Y ? from.X : 0, rowScreenPosition == to.Y ? to.X : row.CurrentMaximalCursorPosition, background);
             }
             canvas.Redraw();
+        }
+
+        public void MoveScrollbarToBeginning()
+        {
+            SetScrollbarValue(scrollbar.LowerValue);
         }
 
         public void MoveScrollbarToEnd()
@@ -690,6 +705,13 @@ namespace TermSharp
         {
             double unused;
             return FindRowIndexAtPosition(GetMaximumScrollbarValue(), out unused) + screenPosition;
+        }
+
+        private void ScrollRows(int offset)
+        {
+            var firstDisplayedRowIndex = FindRowIndexAtPosition(scrollbar.Value, out _);
+            var newPosition = GetPositionOfTheRow(firstDisplayedRowIndex + offset);
+            SetScrollbarValue(newPosition);
         }
 
         private List<double> heightMap;
