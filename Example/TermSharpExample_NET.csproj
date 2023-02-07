@@ -1,0 +1,17 @@
+<Project DefaultTargets="Build" Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!-- <GenerateAssemblyInfo>false</GenerateAssemblyInfo> -->
+    <!-- <Deterministic>false</Deterministic> -->
+    <AssemblyName>TermSharpExample</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\xwt\Xwt\Xwt_NET.csproj"/>
+    <ProjectReference Include="..\xwt\Xwt.Gtk\Xwt.Gtk3_NET.csproj"/>
+    <ProjectReference Include="..\TermSharp_NET.csproj"/>
+  </ItemGroup>
+</Project>

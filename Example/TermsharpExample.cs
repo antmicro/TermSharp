@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reflection;
 using Xwt;
 
 namespace TermSharp.Example
@@ -16,7 +17,15 @@ namespace TermSharp.Example
     {
         public static void Main(string[] args)
         {
+        #if NET
+            var assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var assembly = Assembly.LoadFrom(Path.Combine(assemblyLocation, "Xwt.Gtk3.dll"));
+            DllMap.Register(assembly);
+
+            Application.Initialize(ToolkitType.Gtk3);
+        #else
             Application.Initialize(ToolkitType.Gtk);
+        #endif
             var window = new Window();
             window.Title = "Termsharp";
 
