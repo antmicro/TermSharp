@@ -389,10 +389,10 @@ namespace TermSharp
 
         private void OnCanvasButtonPressed(object sender, ButtonEventArgs e)
         {
-            canvas.SetFocus();
-
             if(e.Button == PointerButton.Left)
             {
+                canvas.SetFocus();
+
                 var position = e.Position;
                 lastMousePosition = position;
                 position.Y += scrollbar.Value;
