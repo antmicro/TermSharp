@@ -28,6 +28,7 @@ namespace TermSharp.Rows
         {
             cursorInRow = null;
             defaultForeground = parameters.DefaultForeground;
+            defaultBackground = parameters.DefaultBackground;
             selectionColor = parameters.SelectionColor;
             textLayout = RowUtils.TextLayoutCache.GetValue(parameters);
             lineSize = RowUtils.LineSizeCache.GetValue(parameters);
@@ -123,10 +124,12 @@ namespace TermSharp.Rows
                 selectedContent = null;
             }
 
+            textLayout.SetForeground(defaultForeground, 0, textLayout.Text.Length);
             foreach(var entry in GetColorRanges(foregroundColors))
             {
                 textLayout.SetForeground(entry.Item3, entry.Item1, entry.Item2);
             }
+            textLayout.SetBackground(defaultBackground, 0, textLayout.Text.Length);
             foreach(var entry in GetColorRanges(backgroundColors))
             {
                 textLayout.SetBackground(entry.Item3, entry.Item1, entry.Item2);
@@ -134,7 +137,7 @@ namespace TermSharp.Rows
             if(cursorInRow.HasValue)
             {
                 // we draw a rectangle AND set background so that one can see cursor in a row without character
-                textLayout.SetForeground(Colors.Black, cursorInRow.Value, 1);
+                textLayout.SetForeground(defaultBackground, cursorInRow.Value, 1);
             }
             ctx.DrawTextLayout(textLayout, 0, 0);
             textLayout.ClearAttributes();
@@ -335,7 +338,7 @@ namespace TermSharp.Rows
         {
             // the index may be shifted by new line characters in wrapped lines, so we subtract the amount of subrows.
             index -= index / charsOnLine;
-            return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : Colors.Black;
+            return (specialForegrounds != null && specialForegrounds.ContainsKey(index)) ? specialForegrounds[index].WithIncreasedLight(0.2) : defaultBackground;
         }
 
         public override string ToString()
@@ -349,6 +352,7 @@ namespace TermSharp.Rows
         private string selectedContent;
         private string content;
         private Color defaultForeground;
+        private Color defaultBackground;
         private Color selectionColor;
         private int lengthInTextElements;
         private int? cursorInRow;
