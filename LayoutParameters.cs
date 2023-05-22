@@ -10,10 +10,11 @@ namespace TermSharp
 {
     internal class LayoutParameters : ILayoutParameters
     {
-        public LayoutParameters(Font font, Color defaultForegroundColor, Color selectionColor)
+        public LayoutParameters(Font font, Color defaultForegroundColor, Color defaultBackgroundColor, Color selectionColor)
         {
             this.font = font;
             this.defaultForegroundColor = defaultForegroundColor;
+            this.defaultBackgroundColor = defaultBackgroundColor;
             this.selectionColor = selectionColor;
         }
 
@@ -67,6 +68,22 @@ namespace TermSharp
                 UpdateGeneration();
             }
         }
+        public Color DefaultBackground
+        {
+            get
+            {
+                return defaultBackgroundColor;
+            }
+            set
+            {
+                if(value == defaultBackgroundColor)
+                {
+                    return;
+                }
+                defaultBackgroundColor = value;
+                UpdateGeneration();
+            }
+        }
 
         public Color SelectionColor
         {
@@ -101,6 +118,7 @@ namespace TermSharp
         private Font font;
         private int generation;
         private Color defaultForegroundColor;
+        private Color defaultBackgroundColor;
         private Color selectionColor;
         private double width;
     }

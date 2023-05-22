@@ -30,8 +30,7 @@ namespace TermSharp
 
             rows = new List<IRow>();
             heightMap = new List<double>();
-            layoutParameters = new LayoutParameters(Font, DefaultGray, Colors.LightSlateGray);
-            DefaultBackground = Colors.Black;
+            layoutParameters = new LayoutParameters(Font, DefaultGray, Colors.Black, Colors.LightSlateGray);
 
             layoutParameters.Font = Font.SystemMonospaceFont;
             canvas = new TerminalCanvas(this);
@@ -274,12 +273,11 @@ namespace TermSharp
         {
             get
             {
-                return defaultBackground;
+                return layoutParameters.DefaultBackground;
             }
             set
             {
-                BackgroundColor = value;
-                defaultBackground = value;
+                layoutParameters.DefaultBackground = value;
             }
         }
 
@@ -723,7 +721,6 @@ namespace TermSharp
         private Point lastMousePosition;
         private int autoscrollStep;
         private TaskCompletionSource<bool> autoscrollEnabled;
-        private Color defaultBackground;
         private int lastNonDummyRow;
         private bool isInitialized;
 

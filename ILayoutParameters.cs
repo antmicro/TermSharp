@@ -13,6 +13,7 @@ namespace TermSharp
         Font Font { get; }
         double Width { get; }
         Color DefaultForeground { get; }
+        Color DefaultBackground { get; }
         Color SelectionColor { get; }
     }
 }
