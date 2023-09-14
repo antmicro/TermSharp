@@ -1,9 +1,7 @@
 <Project DefaultTargets="Build" Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <!-- <GenerateAssemblyInfo>false</GenerateAssemblyInfo> -->
-    <!-- <Deterministic>false</Deterministic> -->
     <AssemblyName>TermSharpExample</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
