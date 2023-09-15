@@ -3,7 +3,7 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <EnableDefaultItems>false</EnableDefaultItems>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	  <Deterministic>false</Deterministic>
+    <Deterministic>false</Deterministic>
     <RootNamespace>TermSharp</RootNamespace>
     <AssemblyName>TermSharp</AssemblyName>
   </PropertyGroup>
