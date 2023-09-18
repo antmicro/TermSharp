@@ -91,6 +91,27 @@ namespace TermSharp.Vt100
 
         private void HandleControlModifier(Key key)
         {
+            // CtrlLeftArrow/CtrlRightArrow
+            if(key == Key.Right || key == Key.Left)
+            {
+                // Invoke correct Vt100 sequence for AntShell
+                dataCallback((byte)ControlByte.Escape);
+                dataCallback((byte)ControlByte.ControlSequenceIntroducer);
+                dataCallback((byte)'1');
+                dataCallback((byte)';');
+                dataCallback((byte)'5');
+
+                if(key == Key.Left)
+                {
+                    dataCallback((byte)'D');
+                }
+                else if(key == Key.Right)
+                {
+                    dataCallback((byte)'C');
+                }
+                return;
+            }
+
             if(key >= Key.a && key <= Key.z)
             {
                 key -= 32;
