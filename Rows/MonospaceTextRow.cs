@@ -153,7 +153,9 @@ namespace TermSharp.Rows
             var maxColumn = MaximalColumn + 1;
             var column = offset % maxColumn;
             var row = offset / maxColumn;
-            ctx.SetColor(defaultForeground);
+            var transparentForeground = defaultForeground; // Color is a struct
+            transparentForeground.Alpha = cursorTransparency;
+            ctx.SetColor(transparentForeground);
             ctx.Rectangle(new Rectangle(column * charWidth, row * lineSize.Height, charWidth, lineSize.Height));
             if(focused)
             {
@@ -351,6 +353,7 @@ namespace TermSharp.Rows
         private TextLayout textLayout;
         private string selectedContent;
         private string content;
+        private const double cursorTransparency = 0.6;
         private Color defaultForeground;
         private Color defaultBackground;
         private Color selectionColor;
