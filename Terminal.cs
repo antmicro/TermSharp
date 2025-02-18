@@ -56,6 +56,7 @@ namespace TermSharp
 
         public void Close()
         {
+            scrollbar.ValueChanged -= OnScrollbarValueChanged;
             cursor.Dispose();
             base.Dispose(disposing: true);
         }
