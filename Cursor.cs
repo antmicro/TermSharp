@@ -4,6 +4,7 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TermSharp.Misc;
 
@@ -16,7 +17,9 @@ namespace TermSharp
             this.terminal = terminal;
             this.canvas = canvas;
             BlinkingRate = TimeSpan.FromMilliseconds(300);
-            Task blinkingFunction = HandleBlinkingAsync();
+            tokenSource = new CancellationTokenSource();
+            blinkingToken = tokenSource.Token;
+            blinkingFunction = Task.Run(HandleBlinkingAsync, blinkingToken);
         }
 
         public void StayOnForNBlinks(int n)
@@ -74,9 +77,9 @@ namespace TermSharp
 
         private async Task HandleBlinkingAsync()
         {
-            while(!awaitingBlinkerHalt)
+            while(!blinkingToken.IsCancellationRequested)
             {
-                await Task.Delay(BlinkingRate);
+                await Task.Delay(BlinkingRate, blinkingToken);
                 if(blinkWaitRounds > 0)
                 {
                     blinkWaitRounds--;
@@ -88,20 +91,21 @@ namespace TermSharp
                     canvas.Redraw();
                 }
             }
-            awaitingBlinkerHalt = false;
         }
 
         public void Dispose()
         {
-            awaitingBlinkerHalt = true;
-            while(awaitingBlinkerHalt);
+            tokenSource.Cancel();
+            blinkingFunction.Wait();
+            tokenSource.Dispose();
         }
-
-        private bool awaitingBlinkerHalt;
 
         private int blinkWaitRounds;
         private bool blinkState;
         private IntegerPosition position;
+        private readonly Task blinkingFunction;
+        private readonly CancellationTokenSource tokenSource;
+        private readonly CancellationToken blinkingToken;
 
         private readonly Terminal terminal;
         private readonly Terminal.TerminalCanvas canvas;
