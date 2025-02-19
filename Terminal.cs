@@ -57,6 +57,11 @@ namespace TermSharp
         public void Close()
         {
             scrollbar.ValueChanged -= OnScrollbarValueChanged;
+            canvas.MouseScrolled -= OnCanvasMouseScroll;
+            canvas.BoundsChanged -= OnCanvasBoundsChanged;
+            canvas.ButtonPressed -= OnCanvasButtonPressed;
+            canvas.ButtonReleased -= OnCanvasButtonReleased;
+            canvas.MouseMoved -= OnCanvasMouseMoved;
             cursor.Dispose();
             base.Dispose(disposing: true);
         }
