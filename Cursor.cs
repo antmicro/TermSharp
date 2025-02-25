@@ -79,7 +79,15 @@ namespace TermSharp
         {
             while(!blinkingToken.IsCancellationRequested)
             {
-                await Task.Delay(BlinkingRate, blinkingToken);
+                try
+                {
+                    await Task.Delay(BlinkingRate, blinkingToken);
+                }
+                catch(TaskCanceledException)
+                {
+                    break;
+                }
+
                 if(blinkWaitRounds > 0)
                 {
                     blinkWaitRounds--;
