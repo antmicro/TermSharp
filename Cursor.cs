@@ -4,28 +4,30 @@
 // Full license details are defined in the 'LICENSE' file.
 //
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using TermSharp.Misc;
+using Xwt;
 
 namespace TermSharp
 {
-    public sealed class Cursor
+    public sealed class Cursor : IDisposable
     {
         internal Cursor(Terminal terminal, Terminal.TerminalCanvas canvas)
         {
             this.terminal = terminal;
             this.canvas = canvas;
             BlinkingRate = TimeSpan.FromMilliseconds(300);
-            tokenSource = new CancellationTokenSource();
-            blinkingToken = tokenSource.Token;
-            blinkingFunction = Task.Run(HandleBlinkingAsync, blinkingToken);
+            blinkHandle = Application.TimeoutInvoke(BlinkingRate, UpdateBlinkState);
+        }
+
+        public void Dispose()
+        {
+            blinkHandle.Dispose();
         }
 
         public void StayOnForNBlinks(int n)
         {
             blinkWaitRounds = n;
-            blinkState = true;
+            BlinkState = true;
             canvas.Redraw();
         }
 
@@ -63,57 +65,42 @@ namespace TermSharp
             }
         }
 
-        public TimeSpan BlinkingRate { get; set; }
+        public TimeSpan BlinkingRate
+        {
+            get => blinkingRate;
+            set
+            {
+                blinkingRate = value;
+                if(blinkHandle != null)
+                {
+                    blinkHandle.Dispose();
+                    blinkHandle = Application.TimeoutInvoke(BlinkingRate, UpdateBlinkState);
+                }
+            }
+        }
 
         public bool Enabled { get; set; }
 
-        internal bool BlinkState
+        internal bool BlinkState { get; private set; }
+
+        private bool UpdateBlinkState()
         {
-            get
+            if(blinkWaitRounds > 0)
             {
-                return blinkState;
+                blinkWaitRounds--;
             }
-        }
-
-        private async Task HandleBlinkingAsync()
-        {
-            while(!blinkingToken.IsCancellationRequested)
+            else if(Enabled)
             {
-                try
-                {
-                    await Task.Delay(BlinkingRate, blinkingToken);
-                }
-                catch(TaskCanceledException)
-                {
-                    break;
-                }
-
-                if(blinkWaitRounds > 0)
-                {
-                    blinkWaitRounds--;
-                    continue;
-                }
-                if(Enabled)
-                {
-                    blinkState = !blinkState;
-                    canvas.Redraw();
-                }
+                BlinkState = !BlinkState;
+                canvas.Redraw();
             }
+            return true;
         }
 
-        public void Dispose()
-        {
-            tokenSource.Cancel();
-            blinkingFunction.Wait();
-            tokenSource.Dispose();
-        }
-
+        private TimeSpan blinkingRate;
         private int blinkWaitRounds;
-        private bool blinkState;
         private IntegerPosition position;
-        private readonly Task blinkingFunction;
-        private readonly CancellationTokenSource tokenSource;
-        private readonly CancellationToken blinkingToken;
+        private IDisposable blinkHandle;
 
         private readonly Terminal terminal;
         private readonly Terminal.TerminalCanvas canvas;
