@@ -119,4 +119,3 @@ namespace TermSharp
         private readonly Terminal.TerminalCanvas canvas;
     }
 }
-
