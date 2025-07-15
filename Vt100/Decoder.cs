@@ -32,6 +32,11 @@ namespace TermSharp.Vt100
 
         public void Feed(string textElement)
         {
+            if(textElement == "\0")
+            {
+                return;
+            }
+
             if(receiveState == ReceiveState.IgnoreNextChar)
             {
                 receiveState = ReceiveState.Default;
