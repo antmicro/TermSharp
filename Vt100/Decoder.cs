@@ -466,4 +466,3 @@ namespace TermSharp.Vt100
         }
     }
 }
-
