@@ -74,6 +74,11 @@ namespace TermSharp.Vt100
                 HandleControlModifier(key);
                 return;
             }
+            if((modifiers & ModifierKeys.Alt) != 0)
+            {
+                HandleAltModifier(key);
+                return;
+            }
             if((key >= Key.Space && key <= (Key)126))
             {
                 dataCallback((byte)key);
@@ -119,6 +124,22 @@ namespace TermSharp.Vt100
             if(key >= Key.At && key <= (Key)95)
             {
                 dataCallback((byte)(key - Key.At));
+            }
+        }
+
+        private void HandleAltModifier(Key key)
+        {
+            dataCallback((byte)ControlByte.Escape);
+            if(key == Key.BackSpace)
+            {
+                dataCallback((byte)ControlByte.Delete);
+                return;
+            }
+
+            if((key >= Key.Space && key <= (Key)126))
+            {
+                dataCallback((byte)key);
+                return;
             }
         }
 
