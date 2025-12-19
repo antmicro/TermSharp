@@ -583,13 +583,24 @@ namespace TermSharp
             scrollbar.Value = finalValue;
         }
 
+        private bool ShouldNotHighlight(Rectangle selectedArea, SelectionMode selectionMode)
+        {
+            if(selectionMode != SelectionMode.Normal)
+            {
+                return false;
+            }
+
+            const int boxSize = 3;
+            return Math.Abs(canvas.SelectedArea.Width) < boxSize && Math.Abs(canvas.SelectedArea.Height) < boxSize;
+        }
+
         private void RefreshSelection()
         {
             if(currentScrollStart.HasValue)
             {
                 var scrollStart = currentScrollStart.Value;
                 canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
-                if(canvas.SelectedArea.Width == 0 || canvas.SelectedArea.Height == 0)
+                if(ShouldNotHighlight(canvas.SelectedArea, SelectionMode))
                 {
                     canvas.SelectedArea = default(Rectangle);
                 }
