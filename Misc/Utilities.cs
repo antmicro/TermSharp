@@ -10,7 +10,7 @@ namespace TermSharp.Misc
 {
     internal static class Utilities
     {
-        public static void Swap(ref int a, ref int b)
+        public static void Swap<T>(ref T a, ref T b)
         {
             var tmp = a;
             a = b;

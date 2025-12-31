@@ -17,10 +17,13 @@ namespace TermSharp.Rows
         void DrawCursor(Context ctx, int offset, bool focused);
         void FillClipboardData(ClipboardData data);
         void Erase(int from, int to, Color? background);
+        int GetColumnIndex(double x);
+        double IndexToColumn(int idx);
         int CurrentMaximalCursorPosition { get; }
         int SublineCount { get; }
         int MaximalColumn { get; }
         double LineHeight { get; }
+        string TextContent { get; }
     }
 }
 

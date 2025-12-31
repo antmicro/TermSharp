@@ -9,6 +9,8 @@ namespace TermSharp
     public enum SelectionMode
     {
         Normal,
+        Word,
+        Line,
         Block
     }
 }

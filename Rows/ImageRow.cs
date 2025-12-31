@@ -66,7 +66,10 @@ namespace TermSharp.Rows
             return $"[ImageRow:: SublineCount={SublineCount}, Height={(LineHeight * SublineCount)}]";
         }
 
+        public int GetColumnIndex(double x) => 0;
+        public double IndexToColumn(int idx) => 0;
         public int CurrentMaximalCursorPosition => MaximalColumn;
+        public string TextContent => "";
         public int SublineCount { get; private set; }
         public int MaximalColumn { get; private set; }
         public double LineHeight { get; private set; }

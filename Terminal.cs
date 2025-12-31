@@ -405,6 +405,7 @@ namespace TermSharp
                 {
                     row.ResetSelection();
                 }
+                HandleMultiplePresses(e);
                 RefreshSelection();
             }
             if(e.Button == PointerButton.Right)
@@ -417,6 +418,71 @@ namespace TermSharp
             }
         }
 
+        private Rectangle GetWordRect(int x, int y)
+        {
+            var row = rows[FindRowIndexAtPosition(y, out var yStart)];
+            var rowText = row.TextContent;
+            var colIdx = row.GetColumnIndex(x);
+
+            var wrappedRow = (row.LineHeight == 0.0) ? 0 : (int)((y - yStart) / row.LineHeight);
+
+            var selectedWordStart = colIdx + (row.MaximalColumn + 1) * wrappedRow;
+            while(selectedWordStart > 0 && selectedWordStart < rowText.Length)
+            {
+                if(char.IsWhiteSpace(rowText[selectedWordStart - 1]))
+                {
+                    break;
+                }
+                selectedWordStart--;
+            }
+            var selectedWordEnd = colIdx + (row.MaximalColumn + 1) * wrappedRow;
+            while(selectedWordEnd > 0 && selectedWordEnd < rowText.Length - 1)
+            {
+                if(char.IsWhiteSpace(rowText[selectedWordEnd + 1]))
+                {
+                    break;
+                }
+                selectedWordEnd++;
+            }
+
+            var startX = row.IndexToColumn(selectedWordStart % (row.MaximalColumn + 1));
+            var endX = row.IndexToColumn(selectedWordEnd % (row.MaximalColumn + 1));
+
+            var startWrapRow = (int)(selectedWordStart / (row.MaximalColumn + 1));
+            var endWrapRow = (int)(selectedWordEnd / (row.MaximalColumn + 1));
+            var wrapRowDiff = endWrapRow - startWrapRow;
+            var width = endX - startX;
+
+            // The required y range is exclusive so we need it to be bigger by an epsilon, since the +0.001
+            var rectY = yStart + 0.001 + (startWrapRow*row.LineHeight);
+            return new Rectangle(startX, rectY, width, wrapRowDiff * row.LineHeight);
+        }
+
+        private Rectangle GetLineRect(int x, int y)
+        {
+            var row = rows[FindRowIndexAtPosition(y, out var yStart)];
+            var rowText = row.TextContent;
+
+            // See comment in GetWordRect
+            return new Rectangle(0, yStart + 0.001, row.IndexToColumn(rowText.Length), (row.SublineCount - 1) * row.LineHeight);
+        }
+
+        private void HandleMultiplePresses(ButtonEventArgs e)
+        {
+            switch(e.MultiplePress)
+            {
+            case 1:
+                SelectionMode = SelectionMode.Normal;
+                break;
+            case 2:
+                SelectionMode = SelectionMode.Word;
+                break;
+            case 3:
+                SelectionMode = SelectionMode.Line;
+                break;
+            }
+        }
+
         private void OnCanvasButtonReleased(object sender, ButtonEventArgs e)
         {
             if(e.Button == PointerButton.Left)
@@ -424,7 +490,7 @@ namespace TermSharp
                 SetAutoscrollValue(0);
                 var mousePosition = e.Position;
                 mousePosition.Y += scrollbar.Value;
-                if(mousePosition == (currentScrollStart ?? default(Point)))
+                if(mousePosition == (currentScrollStart ?? default(Point)) && SelectionMode == SelectionMode.Normal)
                 {
                     canvas.SelectedArea = default(Rectangle);
                 }
@@ -583,6 +649,40 @@ namespace TermSharp
             scrollbar.Value = finalValue;
         }
 
+        // This is not the same as `Rectangle.Union`. It's possible for the width to be
+        // a negative value and it's intentional because later we use it to derive the
+        // 'selection direction' in `MonospaceTextRow`. This is for handling single lines with
+        // multiple line breaks. There are two possible cases (not 4 because of the swapping):
+        //
+        // 1) First one is the 'normal one' when a.X < b.X, where we get a union
+        //  a
+        //  +---+-----+
+        //  |   |     |
+        //  +---+ b   |
+        //  |     +---+
+        //  |     |   |
+        //  +-----+---+
+        //
+        // 2) Second is the 'negative width one' when a.X > b.X, where we go
+        // from a's top left to b's bottom right
+        //          a
+        //     +----+---+
+        //     |    |   |
+        // b   |    +---+
+        // +---+    |
+        // |   |    |
+        // +---+----+
+        //
+        private Rectangle CombineTwoRects(Rectangle a, Rectangle b)
+        {
+            if(a.Y > b.Y || (a.Y == b.Y && a.X > b.X) || (a.X == b.X && a.Y == b.Y && a.Width > b.Width))
+            {
+                Utilities.Swap(ref a, ref b);
+            }
+
+            return new Rectangle(a.X, a.Y, b.X - a.X + b.Width, b.Y - a.Y + b.Height);
+        }
+
         private bool ShouldNotHighlight(Rectangle selectedArea, SelectionMode selectionMode)
         {
             if(selectionMode != SelectionMode.Normal)
@@ -599,7 +699,23 @@ namespace TermSharp
             if(currentScrollStart.HasValue)
             {
                 var scrollStart = currentScrollStart.Value;
-                canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
+                if(SelectionMode == SelectionMode.Normal)
+                {
+                    canvas.SelectedArea = new Rectangle(scrollStart.X, scrollStart.Y, lastMousePosition.X - scrollStart.X, lastMousePosition.Y + scrollbar.Value - scrollStart.Y);
+                }
+                else if(SelectionMode == SelectionMode.Word)
+                {
+                    var startRect = GetWordRect((int)scrollStart.X, (int)scrollStart.Y);
+                    var endRect = GetWordRect((int)lastMousePosition.X, (int)(lastMousePosition.Y + scrollbar.Value));
+                    canvas.SelectedArea = CombineTwoRects(startRect, endRect);
+                }
+                else if(SelectionMode == SelectionMode.Line)
+                {
+                    Rectangle startRect = GetLineRect((int)scrollStart.X, (int)scrollStart.Y);
+                    Rectangle endRect = GetLineRect((int)lastMousePosition.X, (int)(lastMousePosition.Y + scrollbar.Value));
+                    canvas.SelectedArea = CombineTwoRects(startRect, endRect);
+                }
+
                 if(ShouldNotHighlight(canvas.SelectedArea, SelectionMode))
                 {
                     canvas.SelectedArea = default(Rectangle);
@@ -828,7 +944,7 @@ namespace TermSharp
                     var height = parent.rows[i].PrepareForDrawing(parent.layoutParameters);
                     var rowRectangle = new Rectangle(0, heightSoFar, parent.layoutParameters.Width, height);
                     var selectedAreaInRow = rowRectangle.Intersect(screenSelectedArea);
-                    if(SelectionMode == SelectionMode.Normal && selectedAreaInRow != default(Rectangle) &&
+                    if(SelectionMode != SelectionMode.Block && selectedAreaInRow != default(Rectangle) &&
                        (screenSelectedArea.Y <= rowRectangle.Y || screenSelectedArea.Y + screenSelectedArea.Height >= rowRectangle.Y + rowRectangle.Height))
                     {
                         if(rowRectangle.Y < screenSelectedArea.Y)

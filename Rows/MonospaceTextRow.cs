@@ -93,6 +93,18 @@ namespace TermSharp.Rows
                 }
                 else
                 {
+                    var hasWrapping = firstSubrow != lastSubrow;
+                    var endsInThisRow = selectedArea.BottomRight.Y < LineHeight * SublineCount;
+                    var startsBeforeThisRow = selectedArea.TopLeft.X == 0 && selectedArea.TopLeft.Y == 0;
+                    if(hasWrapping && endsInThisRow && !startsBeforeThisRow)
+                    {
+                        // In those cases we want to start at the top right of the selected area rect, not the top left
+                        if(selectionDirection == SelectionDirection.SW || selectionDirection == SelectionDirection.NE)
+                        {
+                            Utilities.Swap(ref firstColumn, ref lastColumn);
+                        }
+                    }
+
                     if(selectionDirection == SelectionDirection.NW)
                     {
                         Utilities.Swap(ref firstColumn, ref lastColumn);
@@ -108,15 +120,22 @@ namespace TermSharp.Rows
                     }
 
                     var textWithNewLinesStringInfo = new StringInfo(textWithNewLines);
-                    firstIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, firstIndex));
-                    lastIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, lastIndex));
-
-                    for(var i = firstIndex; i <= lastIndex; i++)
+                    if(firstIndex > textWithNewLinesStringInfo.LengthInTextElements - 1)
                     {
-                        foregroundColors[i] = GetSelectionForegroundColor(i, charsOnLine);
-                        backgroundColors[i] = selectionColor;
+                        selectedContent = null;
                     }
-                    selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(firstIndex, lastIndex - firstIndex + 1);
+                    else
+                    {
+                        firstIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, firstIndex));
+                        lastIndex = Math.Max(0, Math.Min(textWithNewLinesStringInfo.LengthInTextElements - 1, lastIndex));
+
+                        for(var i = firstIndex; i <= lastIndex; i++)
+                        {
+                            foregroundColors[i] = GetSelectionForegroundColor(i, charsOnLine);
+                            backgroundColors[i] = selectionColor;
+                        }
+                        selectedContent = textWithNewLinesStringInfo.SubstringByTextElements(firstIndex, lastIndex - firstIndex + 1);
+                    }
                 }
             }
             else
@@ -287,7 +306,10 @@ namespace TermSharp.Rows
             return result;
         }
 
+        public int GetColumnIndex(double x) => (int)(x / charWidth);
+        public double IndexToColumn(int idx) => idx * charWidth;
         public int SublineCount { get; private set; }
+        public string TextContent => content;
 
         public double LineHeight
         {
