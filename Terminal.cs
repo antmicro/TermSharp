@@ -372,6 +372,17 @@ namespace TermSharp
                 canvas.KeyPressed -= value;
             }
         }
+        // Different from `cursor.MaximalPosition` - 1. this reports the maximal position of the *screen* cursor, which treats sublines in a line as different lines
+        public IntegerPosition TerminalSize
+        {
+            get
+            {
+                var maxY = ScreenRowCount - 1;
+                var maxX = GetScreenRow(maxY).MaximalColumn;
+                // `maxX` and `maxY` are 0-based, so we need to add 1 for the size
+                return new IntegerPosition(maxX + 1, maxY + 1);
+            }
+        }
 
         public event Action Initialized;
 
@@ -603,6 +614,7 @@ namespace TermSharp
                 isInitialized = true;
                 CallInitializedEvent();
             }
+            Resized();
         }
 
         private void CallInitializedEvent()
@@ -783,6 +795,8 @@ namespace TermSharp
 
             return true;
         }
+
+        public event Action Resized = () => {};
 
         private void AddToHeightMap(double value)
         {
