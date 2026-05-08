@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="xwt\**" />
+    <Compile Remove="Example\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="xwt\Xwt\Xwt.csproj" />
